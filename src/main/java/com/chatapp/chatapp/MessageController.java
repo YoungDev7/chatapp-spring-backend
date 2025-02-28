@@ -19,20 +19,20 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/messages")
-public class ClassMessageController {
+public class MessageController {
 
-    private final ClassMessageService messageService;
+    private final MessageService messageService;
     
 
     @Autowired
-    public ClassMessageController(ClassMessageService messageService) {
+    public MessageController(MessageService messageService) {
         this.messageService = messageService;
     }
 
     //websocket endpoint
     @MessageMapping("/chat") //where client broadcasts
     @SendTo("/topic/messages") //where server broadcasts
-    public ClassMessage handleMessage(@Payload ClassMessage message) {
+    public Message handleMessage(@Payload Message message) {
         messageService.postNewMessage(message);
         //websocket sends it back to the client
         return message;
@@ -40,12 +40,12 @@ public class ClassMessageController {
 
     
     @GetMapping
-    public List<ClassMessage> AllMessages(){
+    public List<Message> AllMessages(){
         return messageService.getMessages();
     }
 
     @PostMapping
-    public void postMessage(@RequestBody ClassMessage message){
+    public void postMessage(@RequestBody Message message){
         messageService.postNewMessage(message);
     }
 

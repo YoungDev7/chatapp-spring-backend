@@ -13,7 +13,7 @@ import jakarta.persistence.Table;
 @Data
 @NoArgsConstructor
 @Table(name = "user")
-public class ClassUser {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "UID")
@@ -25,7 +25,7 @@ public class ClassUser {
     @Column(name = "EMAIL")
     private String email;
 
-    public ClassUser(String name, String password, String email) {
+    public User(String name, String password, String email) {
         this.name = name;
         this.password = password;
         this.email = email;

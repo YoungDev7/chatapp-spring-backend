@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @Table(name = "MESSAGE")
-public class ClassMessage {
+public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID")
@@ -23,7 +23,7 @@ public class ClassMessage {
     @Column(name = "SENDER")
     private String sender;
 
-    public ClassMessage(String text, String sender) {
+    public Message(String text, String sender) {
         this.text = text;
         this.sender = sender;
     }

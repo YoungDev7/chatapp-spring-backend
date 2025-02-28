@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 
 @Service
-public class ClassMessageService {
+public class MessageService {
     
     @Autowired
     //private SimpMessagingTemplate messagingTemplate;
@@ -15,19 +15,19 @@ public class ClassMessageService {
     private final IUserRepository userRepository;
 
     @Autowired
-    public ClassMessageService(IMessageRepository messageRepository, IUserRepository userRepository) {
+    public MessageService(IMessageRepository messageRepository, IUserRepository userRepository) {
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
     }
 
     //get messages
-    public List<ClassMessage> getMessages(){
+    public List<Message> getMessages(){
         return messageRepository.findAll();
     }
 
     //post new message to database after checking if user is valid 
-    public void postNewMessage(ClassMessage message){
-        Optional<ClassUser> userOptional = userRepository.findUserByName(message.getSender());
+    public void postNewMessage(Message message){
+        Optional<User> userOptional = userRepository.findUserByName(message.getSender());
 
         if(userOptional.isPresent()){
             messageRepository.save(message);

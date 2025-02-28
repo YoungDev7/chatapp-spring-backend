@@ -11,22 +11,22 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
-public class ClassUserService {
+public class UserService {
     
     private final IUserRepository userRepository;
 
     @Autowired
-    public ClassUserService(IUserRepository userRepository){
+    public UserService(IUserRepository userRepository){
         this.userRepository = userRepository;
     }
 
     //get users
-    public List<ClassUser> getUsers(){
+    public List<User> getUsers(){
         return userRepository.findAll();
     }
 
     //new user
-    public void postNewUser(ClassUser user){
+    public void postNewUser(User user){
         if (user.getUid() != null) {
             throw new IllegalArgumentException("New user should not have an ID set");
         }
@@ -47,7 +47,7 @@ public class ClassUserService {
     @Transactional
     public void updateUser(Long id, String name, String email, String password){
         //checking if user exsits otherwise we throw exeption
-        ClassUser user = userRepository.findById(id).orElseThrow(() -> new IllegalStateException("user id" + id + "doesnt exist"));
+        User user = userRepository.findById(id).orElseThrow(() -> new IllegalStateException("user id" + id + "doesnt exist"));
 
         //update name
         if(name != null && name.length() > 0 && !Objects.equals(user.getName(), name)){
@@ -56,7 +56,7 @@ public class ClassUserService {
 
         //update email, check if email is aleady taken before we update
         if(email != null && email.length() > 0 && !Objects.equals(user.getEmail(), email)){
-            Optional<ClassUser> userOptional = userRepository.findUserByEmail(email);
+            Optional<User> userOptional = userRepository.findUserByEmail(email);
             
             if(userOptional.isPresent()){
                 throw new IllegalStateException("email taken");

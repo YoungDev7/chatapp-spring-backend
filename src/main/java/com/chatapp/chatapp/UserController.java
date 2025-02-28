@@ -15,22 +15,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/users")
-public class ClassUserController {
+public class UserController {
     
-    private final ClassUserService userService;
+    private final UserService userService;
     
     @Autowired
-    public ClassUserController(ClassUserService userService) {
+    public UserController(UserService userService) {
         this.userService = userService;
     }
     
     @GetMapping
-    public List<ClassUser> AllUsers(){
+    public List<User> AllUsers(){
         return userService.getUsers();
     }
 
     @PostMapping
-    public void postUser(@RequestBody ClassUser user){
+    public void postUser(@RequestBody User user){
         userService.postNewUser(user);
     }
 

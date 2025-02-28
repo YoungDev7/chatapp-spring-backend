@@ -6,13 +6,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class ClassConfig {
+public class Config {
 
     @Bean
     CommandLineRunner commandLineRunner(IMessageRepository messageRepository, IUserRepository userRepository){
         return args ->{
-            ClassMessage testMessage = new ClassMessage("Hello, World!", "John");
-            ClassUser testUser = new ClassUser("Mike", "password123", "mikehock@mail.com");
+            Message testMessage = new Message("Hello, World!", "John");
+            User testUser = new User("Mike", "password123", "mikehock@mail.com");
             //repository.save(testMessage);
             //userRepository.save(testUser);
         };

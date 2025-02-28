@@ -9,13 +9,13 @@ import org.springframework.lang.NonNull;
 import java.util.*;
 
 @Repository
-public interface IUserRepository extends JpaRepository<ClassUser, Long>{
+public interface IUserRepository extends JpaRepository<User, Long>{
     @NonNull
-    List<ClassUser> findAll();
+    List<User> findAll();
 
-    @Query("SELECT u FROM ClassUser u WHERE u.name = :name")
-    Optional<ClassUser> findUserByName(@Param("name") String name);
+    @Query("SELECT u FROM User u WHERE u.name = :name")
+    Optional<User> findUserByName(@Param("name") String name);
     
-    @Query("SELECT u FROM ClassUser u WHERE u.email = :email")
-    Optional<ClassUser> findUserByEmail(@Param("email") String email);
+    @Query("SELECT u FROM User u WHERE u.email = :email")
+    Optional<User> findUserByEmail(@Param("email") String email);
 }
