@@ -1,6 +1,9 @@
-package com.chatapp.chatapp;
+package com.chatapp.chatapp.service;
 
 import org.springframework.stereotype.Service;
+
+import com.chatapp.chatapp.entity.User;
+import com.chatapp.chatapp.repository.IUserRepository;
 
 import jakarta.transaction.Transactional;
 

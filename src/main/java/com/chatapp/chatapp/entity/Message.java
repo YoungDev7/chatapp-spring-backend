@@ -1,4 +1,4 @@
-package com.chatapp.chatapp;
+package com.chatapp.chatapp.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

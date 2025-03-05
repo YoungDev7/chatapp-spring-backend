@@ -1,9 +1,14 @@
-package com.chatapp.chatapp;
+package com.chatapp.chatapp.config;
 
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.chatapp.chatapp.entity.Message;
+import com.chatapp.chatapp.entity.User;
+import com.chatapp.chatapp.repository.IMessageRepository;
+import com.chatapp.chatapp.repository.IUserRepository;
 
 @Configuration
 public class Config {

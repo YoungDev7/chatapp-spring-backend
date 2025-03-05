@@ -1,9 +1,14 @@
-package com.chatapp.chatapp;
+package com.chatapp.chatapp.service;
 
 import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+
+import com.chatapp.chatapp.entity.Message;
+import com.chatapp.chatapp.entity.User;
+import com.chatapp.chatapp.repository.IMessageRepository;
+import com.chatapp.chatapp.repository.IUserRepository;
 
 
 @Service
