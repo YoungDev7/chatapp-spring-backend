@@ -11,10 +11,9 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 import com.chatapp.chatapp.auth.JwtAuthenticationFilter;
 
@@ -26,7 +25,9 @@ import lombok.RequiredArgsConstructor;
 @EnableMethodSecurity
 public class SecurityConfig {
     
-    private static final String[] WHITE_LIST_URL = {"/api/v1/auth/**",
+        //having auth/** whitelisted could cause issues since we want to authenticaate for /refresh endpoint */
+    private static final String[] WHITE_LIST_URL = {
+            "/api/v1/auth/**",
             "/v2/api-docs",
             "/v3/api-docs",
             "/v3/api-docs/**",
@@ -39,7 +40,7 @@ public class SecurityConfig {
             "/swagger-ui.html"};
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
-    private final LogoutHandler logoutHandler;
+    private final CorsConfigurationSource corsSource;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -47,18 +48,19 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req ->
                         req.requestMatchers(WHITE_LIST_URL)
+                                .permitAll()
+                                .anyRequest()
                                 .authenticated()
                 )
+                .cors(cors -> cors.configurationSource(corsSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .logout(logout ->
-                        logout.logoutUrl("/api/v1/auth/logout")
-                                .addLogoutHandler(logoutHandler)
-                                .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext())
-                )
+                
         ;
 
         return http.build();
     }
+
+
 }

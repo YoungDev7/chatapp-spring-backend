@@ -1,0 +1,7 @@
+handle jwt validation exceptions (test before) 
+    No, you're currently not handling exceptions thrown by parseClaimsJws(token)
+    If the JWT signature fails, it will throw an exception that breaks the filter chain
+    The client won't receive a meaningful response - they'll likely get a 500 Internal Server Error instead of a proper 401 Unauthorized
+
+implement refresh token rotation
+remove I in repository names
