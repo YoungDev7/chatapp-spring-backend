@@ -31,8 +31,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
     throws ServletException, IOException {
          
-      // Skip authentication for auth endpoints
-      if (request.getServletPath().contains("/api/v1/auth") && !request.getServletPath().contains("/api/v1/auth/refresh")) {
+      // Skip authentication for login endpoint
+      if (request.getServletPath().contains("/api/v1/auth/authenticate")) {
         System.out.println("[DEBUG] Skipping auth for " + request.getServletPath());
         filterChain.doFilter(request, response);
         return;
