@@ -60,7 +60,7 @@ public class AuthService {
         tokenRepository.save(token);
     }
 
-    public void revokeAllUserTokens(User user) {
+    private void revokeAllUserTokens(User user) {
         var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getUid());
         
         if (validUserTokens.isEmpty()){

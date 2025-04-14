@@ -74,9 +74,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
               userDetails = this.userDetailsService.loadUserByUsername(validationResult.getUsername());
             } catch (UsernameNotFoundException e){
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-              response.getWriter().write("Invalid token");
+              response.getWriter().write("Invalid token " + validationResult.getStatus());
               System.out.println("[LOG] Invalid access token for " + request.getServletPath());
               System.out.println("  exception: " + e.getMessage());
+              System.out.println("  user: " + validationResult.getUsername());
+              System.out.println("  status: " + validationResult.getStatus());
               System.out.println("  auth header: " + authHeader);
               return;
             }
@@ -86,7 +88,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
               setAuthentication(request, userDetails);
             } else {
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-              response.getWriter().write("Invalid token");
+              response.getWriter().write("Invalid token " + validationResult.getStatus());
               System.out.println("[LOG] Invalid access token for " + request.getServletPath());
               System.out.println("status: " + validationResult.getStatus());
               System.out.println("  auth header: " + authHeader);
@@ -130,7 +132,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
               userDetails = this.userDetailsService.loadUserByUsername(validationResultAccess.getUsername());
             } catch (UsernameNotFoundException e){
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-              response.getWriter().write("Invalid token");
+              response.getWriter().write("Invalid token " + validationResultAccess.getStatus());
               System.out.println("[LOG] Invalid access token for " + request.getServletPath());
               System.out.println("  exception: " + e.getMessage());
               System.out.println("  auth header: " + authHeader);
@@ -142,7 +144,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
               isAccessTokenValid = true;
             }else {
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-              response.getWriter().write("Invalid token");
+              response.getWriter().write("Invalid token " + validationResultAccess.getStatus());
               System.out.println("[LOG] Invalid access token for " + request.getServletPath());
               System.out.println("status: " + validationResultAccess.getStatus());
               System.out.println("  auth header: " + authHeader);
@@ -161,7 +163,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
           userDetailsRefreshToken = this.userDetailsService.loadUserByUsername(validationResultRefresh.getUsername());
         } catch (UsernameNotFoundException e){
           response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-          response.getWriter().write("Invalid token");
+          response.getWriter().write("Invalid token " + validationResultRefresh.getStatus());
           System.out.println("[LOG] Invalid refresh token for " + request.getServletPath());
           System.out.println("  exception: " + e.getMessage());
           System.out.println("  auth header: " + authHeader);
@@ -179,7 +181,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
                 setAuthentication(request, userDetailsRefreshToken);
             }else {
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-              response.getWriter().write("Invalid token");
+              response.getWriter().write("Invalid token " + validationResultRefresh.getStatus());
               System.out.println("[LOG] Invalid Refresh token for " + request.getServletPath());
               System.out.println("status: " + validationResultRefresh.getStatus());
               System.out.println("in database: " + isTokenInDatabase);
