@@ -2,3 +2,5 @@ implement refresh token rotation
 remove I in repository names
 log all requests
 make it so that access tokens dont requre database query
+add proper logging (library)
+unit tests and other kind of tests (research)
