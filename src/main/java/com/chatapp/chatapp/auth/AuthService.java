@@ -7,12 +7,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.chatapp.chatapp.entity.Token;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.IUserRepository;
 import com.chatapp.chatapp.repository.TokenRepository;
+import com.chatapp.chatapp.util.ApplicationLogger;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -34,6 +38,8 @@ public class AuthService {
             revokeAllUserTokens(user);
             saveUserToken(user, refreshToken);
             
+            HttpServletRequest servletRequest = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            ApplicationLogger.requestLog(servletRequest, "user authenticated", user.getUid().toString(), 200);
             return new AuthResponse(jwtToken, refreshToken);
         }catch(BadCredentialsException e){
             throw e;
@@ -47,6 +53,10 @@ public class AuthService {
         User user = repository.findUserByEmail(username).orElseThrow(() -> new IllegalStateException("user not found: " + username));
 
         var newAccessToken = jwtService.generateToken(user);
+
+        HttpServletRequest servletRequest = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        ApplicationLogger.requestLog(servletRequest, "token refreshed", user.getUid().toString(), 200);
+
         return new AuthResponse(newAccessToken, null);
     }
 

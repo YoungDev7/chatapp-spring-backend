@@ -1,0 +1,37 @@
+2025-04-19T11:52:32.156+02:00  INFO 7172 --- [chatapp] [restartedMain] com.chatapp.chatapp.ChatappApplication   : Starting ChatappApplication using Java 22 with PID 7172 (/home/paposh/repositories/chatapp-spring-backend/target/classes started by paposh in /home/paposh/repositories/chatapp-spring-backend)
+2025-04-19T11:52:32.158+02:00  INFO 7172 --- [chatapp] [restartedMain] com.chatapp.chatapp.ChatappApplication   : No active profile set, falling back to 1 default profile: "default"
+2025-04-19T11:52:32.207+02:00  INFO 7172 --- [chatapp] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-04-19T11:52:32.208+02:00  INFO 7172 --- [chatapp] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-04-19T11:52:33.504+02:00  INFO 7172 --- [chatapp] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-04-19T11:52:33.577+02:00  INFO 7172 --- [chatapp] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 64 ms. Found 3 JPA repository interfaces.
+2025-04-19T11:52:34.386+02:00  INFO 7172 --- [chatapp] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-04-19T11:52:34.401+02:00  INFO 7172 --- [chatapp] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-04-19T11:52:34.401+02:00  INFO 7172 --- [chatapp] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.25]
+2025-04-19T11:52:34.450+02:00  INFO 7172 --- [chatapp] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-04-19T11:52:34.451+02:00  INFO 7172 --- [chatapp] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2243 ms
+2025-04-19T11:52:34.628+02:00  INFO 7172 --- [chatapp] [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-04-19T11:52:34.716+02:00  INFO 7172 --- [chatapp] [restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.2.Final
+2025-04-19T11:52:34.757+02:00  INFO 7172 --- [chatapp] [restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-04-19T11:52:35.092+02:00  INFO 7172 --- [chatapp] [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-04-19T11:52:35.118+02:00  INFO 7172 --- [chatapp] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-04-19T11:52:35.545+02:00  INFO 7172 --- [chatapp] [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3222cdeb
+2025-04-19T11:52:35.546+02:00  INFO 7172 --- [chatapp] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-04-19T11:52:35.622+02:00  WARN 7172 --- [chatapp] [restartedMain] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-04-19T11:52:36.491+02:00  INFO 7172 --- [chatapp] [restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-04-19T11:52:36.606+02:00  INFO 7172 --- [chatapp] [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-04-19T11:52:36.793+02:00  INFO 7172 --- [chatapp] [restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-04-19T11:52:37.529+02:00  INFO 7172 --- [chatapp] [restartedMain] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2025-04-19T11:52:37.530+02:00  WARN 7172 --- [chatapp] [restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
+2025-04-19T11:52:37.695+02:00  WARN 7172 --- [chatapp] [restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-04-19T11:52:38.330+02:00  INFO 7172 --- [chatapp] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-04-19T11:52:38.364+02:00  INFO 7172 --- [chatapp] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-04-19T11:52:38.366+02:00  INFO 7172 --- [chatapp] [restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2025-04-19T11:52:38.367+02:00  INFO 7172 --- [chatapp] [restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@41f61d3d]]
+2025-04-19T11:52:38.367+02:00  INFO 7172 --- [chatapp] [restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2025-04-19T11:52:38.379+02:00  INFO 7172 --- [chatapp] [restartedMain] com.chatapp.chatapp.ChatappApplication   : Started ChatappApplication in 6.712 seconds (process running for 7.4)
+2025-04-19T11:52:59.790+02:00  INFO 7172 --- [chatapp] [SpringApplicationShutdownHook] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopping...
+2025-04-19T11:52:59.790+02:00  INFO 7172 --- [chatapp] [SpringApplicationShutdownHook] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@41f61d3d]]
+2025-04-19T11:52:59.790+02:00  INFO 7172 --- [chatapp] [SpringApplicationShutdownHook] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopped.
+2025-04-19T11:53:00.409+02:00  INFO 7172 --- [chatapp] [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-04-19T11:53:00.411+02:00  INFO 7172 --- [chatapp] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-04-19T11:53:00.415+02:00  INFO 7172 --- [chatapp] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
