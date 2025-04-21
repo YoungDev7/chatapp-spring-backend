@@ -87,4 +87,11 @@ public class ApplicationLogger {
                     "   ->user: {}\n" + 
                     "   ->status: {}\n", statusCode, message, path, authHeader, clientIP, user, validationStatus);
     }
+
+    public static void websocketConnectionLog(String message, String user, String accessorCommand, String channel, String token){
+        logger.info("WebSocket Connection[{}] {}\n" + 
+                    "   ->user: {}\n" +
+                    "   ->token: {}\n" +
+                    "   ->channel: {}\n", accessorCommand, message, user, token, channel);
+    }
 }
