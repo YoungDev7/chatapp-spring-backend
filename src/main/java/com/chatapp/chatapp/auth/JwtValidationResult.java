@@ -20,7 +20,9 @@ public class JwtValidationResult {
         EXPIRED,
         INVALID_SIGNATURE,
         MALFORMED,
-        INVALID
+        INVALID,
+        ILLEGAL,
+        UNSUPPORTED
     }
     
     // This method lets you know if the token can be used despite being expired

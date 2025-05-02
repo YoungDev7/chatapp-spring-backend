@@ -4,7 +4,11 @@ log all requests
 make it so that access tokens dont requre database query
 add proper logging (library)
 unit tests and other kind of tests (research)
+configure CORS and CSRF
 
 frontend: state management
+right now: refresh request is not being fired, user is not being logged off when token is invalid
+ shouldnt get rid of token from local storage before refresh request has been fired
 
 do leetcode
+docker

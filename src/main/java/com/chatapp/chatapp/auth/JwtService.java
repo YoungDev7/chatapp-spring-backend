@@ -76,7 +76,28 @@ public class JwtService {
                 .status(JwtValidationResult.ValidationStatus.MALFORMED)
                 .build();
                 
-    } catch (io.jsonwebtoken.JwtException e) {
+    } catch (io.jsonwebtoken.UnsupportedJwtException e) {
+        return JwtValidationResult.builder()
+                .valid(false)
+                .expired(false)
+                .username(null)
+                .status(JwtValidationResult.ValidationStatus.UNSUPPORTED)
+                .build();
+    }catch (IllegalArgumentException e) {
+        return JwtValidationResult.builder()
+                .valid(false)
+                .expired(false)
+                .username(null)
+                .status(JwtValidationResult.ValidationStatus.ILLEGAL)
+                .build();
+    }catch(io.jsonwebtoken.security.SecurityException e){
+        return JwtValidationResult.builder()
+                .valid(false)
+                .expired(false)
+                .username(null)
+                .status(JwtValidationResult.ValidationStatus.INVALID_SIGNATURE)
+                .build();
+    }catch(io.jsonwebtoken.JwtException e) {
         return JwtValidationResult.builder()
                 .valid(false)
                 .expired(false)

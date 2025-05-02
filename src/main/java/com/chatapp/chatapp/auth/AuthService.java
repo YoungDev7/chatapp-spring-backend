@@ -49,8 +49,15 @@ public class AuthService {
     public AuthResponse refreshToken(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
+        User user;
 
-        User user = repository.findUserByEmail(username).orElseThrow(() -> new IllegalStateException("user not found: " + username));
+        try{
+            user = repository.findUserByEmail(username).orElseThrow(() -> new IllegalStateException("user not found: " + username));
+        }catch (IllegalStateException e){
+            HttpServletRequest servletRequest = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            ApplicationLogger.requestLog(servletRequest, "user not found, how did we get here?", username, 403);
+            throw e;
+        }
 
         var newAccessToken = jwtService.generateToken(user);
 

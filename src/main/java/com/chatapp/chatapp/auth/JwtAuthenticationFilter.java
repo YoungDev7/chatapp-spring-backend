@@ -40,7 +40,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         return;
       }
       
-      //System.out.println("[DEBUG] auth not skipped");
 
       final String authHeader = request.getHeader("Authorization");
       final String refreshHeader = request.getHeader("X-Refresh-Token"); //header for refresh token
@@ -63,15 +62,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
           return; 
         }
 
-        //System.out.println("[DEBUG] valid header");
         
         final String jwt = authHeader.substring(7);
         UserDetails userDetails;
         JwtValidationResult validationResult = jwtService.validateToken(jwt);
         
-        //System.out.println("no jwt or user details problesm");
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            //System.out.println("inside of if");
+            
             try{
               userDetails = this.userDetailsService.loadUserByUsername(validationResult.getUsername());
             } catch (UsernameNotFoundException e){
@@ -80,7 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
               ApplicationLogger.requestLog(request, "Invalid access token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, validationResult.getUsername(), validationResult.getStatus().toString(), e.getMessage());
               return;
             }
-        
+          
             // Only validate JWT signature and expiration, no database check
             if (validationResult.isValid()) {
               setAuthentication(request, userDetails);
@@ -92,7 +89,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
               return; 
             }
         }
-        //System.out.println("[DEBUG] outside of if ");
+
         // If we got here, authentication was successful
         filterChain.doFilter(request, response);
         return;
@@ -102,6 +99,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
       // REFRESH & ACCESS TOKEN
       //
       if(authHeader != null && refreshHeader != null){
+
         if ((authHeader == null || !authHeader.startsWith("Bearer ")) && (refreshHeader == null || !refreshHeader.startsWith("Bearer "))) {
           response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
           response.getWriter().write("Invalid authorization format");
@@ -145,12 +143,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
         //REFRESH TOKEN
         final String refreshToken = refreshHeader.substring(7);
-        UserDetails userDetailsRefreshToken;
+        UserDetails userDetailsRefresh;
         JwtValidationResult validationResultRefresh = jwtService.validateToken(refreshToken);	
         
         //must be outside of the if below because we check if username of both tokens is the same
         try{
-          userDetailsRefreshToken = this.userDetailsService.loadUserByUsername(validationResultRefresh.getUsername());
+          userDetailsRefresh = this.userDetailsService.loadUserByUsername(validationResultRefresh.getUsername());
         } catch (UsernameNotFoundException e){
           response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
           response.getWriter().write("Invalid token " + validationResultRefresh.getStatus());
@@ -158,14 +156,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
           return;
         }
 
-        if (SecurityContextHolder.getContext().getAuthentication() == null && isAccessTokenValid && validationResultRefresh.getUsername().equals(validationResultAccess.getUsername())) {  
+        if(!isAccessTokenValid){
+          response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+          response.getWriter().write("Invalid token " + validationResultAccess.getStatus());
+          ApplicationLogger.requestLog(request, "Invalid access token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, validationResultAccess.getUsername(), validationResultAccess.getStatus().toString());
+          return;
+        }
+
+        if(!validationResultRefresh.getUsername().equals(validationResultAccess.getUsername())){
+          response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+          response.getWriter().write("Unauthorized tokens");
+          ApplicationLogger.requestLog(request, "Token holders dont match", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshHeader);
+          return;
+        }
+
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {  
             //database check for refresh tokens
             var isTokenInDatabase = tokenRepository.findByToken(refreshToken)
                 .map(t -> !t.isExpired() && !t.isRevoked())
                 .orElse(false);
                 
             if (validationResultRefresh.isValid() && isTokenInDatabase) {
-                setAuthentication(request, userDetailsRefreshToken);
+                setAuthentication(request, userDetailsRefresh);
                 ApplicationLogger.requestLog(request, "Valid refresh and access token", HttpServletResponse.SC_OK, authHeader, refreshHeader, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString());
             }else {
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -175,7 +187,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             }
         }
       
-        // Continue filter chain regardless of authentication result
+        // Continue filter chain 
         filterChain.doFilter(request, response);
       }
     }    

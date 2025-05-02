@@ -15,7 +15,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import com.chatapp.chatapp.util.ApplicationLogger;
 
@@ -35,48 +34,57 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor  {
         
         logger.debug("preSend: {}", accessor);
 
-        if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-            try {
-                String token = extractToken(accessor);
-                
-                if (StringUtils.hasText(token)) {
-                    JwtValidationResult validationResult = jwtService.validateToken(token);
-                    
-                    if (validationResult.isValid()) {
-                        try {
-                            UserDetails userDetails = userDetailsService.loadUserByUsername(validationResult.getUsername());
-                            
-                            UsernamePasswordAuthenticationToken authentication = 
-                                new UsernamePasswordAuthenticationToken(
-                                    userDetails, 
-                                    null, 
-                                    userDetails.getAuthorities()
-                                );
-                            
-                            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                            accessor.setUser(authentication);
-
-                            ApplicationLogger.websocketConnectionLog("connection successful", accessor.getUser().getName(), accessor.getCommand().toString(), channel.toString(), token);
-                            return message;
-
-                        } catch (Exception e) {
-                            accessor.setHeader("simpConnectMessage", "Authentication failed");
-                            ApplicationLogger.websocketConnectionLog("connection failed" + e.getMessage(), accessor.getUser().getName(), accessor.getCommand().toString(), channel.toString(), token);
-
-                            return null;
-                        }
-                    }
-                }
-            } catch (IllegalArgumentException e) {
-                accessor.setHeader("simpConnectMessage", "Authentication failed");
-                ApplicationLogger.websocketConnectionLog("connection failed" + e.getMessage(), accessor.getUser().getName(), accessor.getCommand().toString(), channel.toString(), null);
-
-                return null;
-            }
+        if (accessor == null || !(StompCommand.CONNECT.equals(accessor.getCommand()))) {
+            return message;
         }
-        return null;
+
+        String token;
+
+        try {
+            token = extractToken(accessor);
+        } catch (IllegalArgumentException e) {
+            accessor.setHeader("simpConnectMessage", "Authentication failed");
+            ApplicationLogger.websocketConnectionLog("connection failed" + e.getMessage(), "unknown", accessor.getCommand() != null ? accessor.getCommand().toString() : "unknown", channel.toString(), null);
+
+            return null;
+        }
+        
+        JwtValidationResult validationResult = jwtService.validateToken(token);
+                    
+        if (!validationResult.isValid()) {
+            accessor.setHeader("simpConnectMessage", "Authentication failed");
+            ApplicationLogger.websocketConnectionLog("connection failed " + validationResult.getStatus(), "unknown", accessor.getCommand() != null ? accessor.getCommand().toString() : "unknown", channel.toString(), token);
+
+            return null;
+        }
+
+        try {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(validationResult.getUsername());
+            
+            UsernamePasswordAuthenticationToken authentication = 
+                new UsernamePasswordAuthenticationToken(
+                    userDetails, 
+                    null, 
+                    userDetails.getAuthorities()
+                );
+            
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            accessor.setUser(authentication);
+
+            ApplicationLogger.websocketConnectionLog("connection successful", userDetails.getUsername(), accessor.getCommand() != null ? accessor.getCommand().toString() : "unknown", channel.toString(), token);
+            return message;
+
+        } catch (Exception e) {
+            accessor.setHeader("simpConnectMessage", "Authentication failed");
+            ApplicationLogger.websocketConnectionLog("connection failed " + e.getMessage(),  "unknown", accessor.getCommand() != null ? accessor.getCommand().toString() : "unknown", channel.toString(), token);
+
+            return null;
+        }
+            
+            
+        
     }
+    
     
     private String extractToken(StompHeaderAccessor accessor) {
         // Try to get from Authorization header (STOMP headers)
@@ -90,21 +98,25 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor  {
             }else {
                 throw new IllegalArgumentException("Invalid Authorization header format");
             }
-        }else {
-            throw new IllegalArgumentException("Authorization header is missing");
         }
         
-        // // Then try to get from query parameters (SockJS URL)
-        // String query = accessor.getFirstNativeHeader("query");
-        // if (query != null && query.contains("token=")) {
-        //     return query.substring(query.indexOf("token=") + 6);
-        // }
+        // Then try to get from query parameters (SockJS URL)
+        String query = accessor.getFirstNativeHeader("query");
+        if (query != null && query.contains("token=Bearer ")) {
+            return query.substring(query.indexOf("token=Bearer ") + 13);
+        }
         
-        // // Finally try to get from sessionAttributes (from handshake)
-        // String token = (String) accessor.getSessionAttributes().get("token");
-        // if (token != null) {
-        //     return token;
-        // }
-        // return null;
+        // Finally try to get from sessionAttributes (from handshake)
+        //handskaheInterceptor handles whether or not the header contains "Bearer" or is empty
+        String token = null;
+        if(accessor.getSessionAttributes() != null) {
+            token = (String) accessor.getSessionAttributes().get("token");
+        }
+        if (token != null) {
+            return token;
+        }
+
+        // If no token found, throw an exception
+        throw new IllegalArgumentException("Authorization header is missing");
     }
 }
