@@ -40,11 +40,11 @@ public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
                 String token = extractTokenFromQuery(query);
                 attributes.put("token", token);
 
-                ApplicationLogger.requestLog(servletRequest, "WebSocket Handshake successful", 101, query);                
+                ApplicationLogger.websocketConnectionLog(servletRequest, "WebSocket Handshake successful", 101, query);                
                 return true;
             }else {
                 attributes.put("token", null);
-                ApplicationLogger.requestLog(servletRequest, "WebSocket Handshake failed: missing token or authentication header", 401, query);
+                ApplicationLogger.websocketConnectionLog(servletRequest, "WebSocket Handshake failed: missing token or authentication header", 401, query);
             }    
         }
         //incase failure accured due to request not being instance of ServletServerHttpRequest

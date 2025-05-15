@@ -1,4 +1,4 @@
-package com.chatapp.chatapp.auth;
+package com.chatapp.chatapp.service;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

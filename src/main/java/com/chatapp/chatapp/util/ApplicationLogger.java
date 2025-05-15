@@ -10,7 +10,7 @@ public class ApplicationLogger {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationLogger.class);
     
     //request, message
-    public static void requestLog(HttpServletRequest request, String message){
+    public static void requestLogFilter(HttpServletRequest request, String message){
         String path = request.getServletPath();
         String clientIP = request.getRemoteAddr();
         logger.info("REQUEST[-] {}\n" + 
@@ -19,7 +19,7 @@ public class ApplicationLogger {
     }
 
     //request, message, statusCode, access token authHeader
-    public static void requestLog(HttpServletRequest request, String message, int statusCode, String authHeader){
+    public static void requestLogFilter(HttpServletRequest request, String message, int statusCode, String authHeader){
         String clientIP = request.getRemoteAddr();
         String path = request.getServletPath();
         logger.info("REQUEST[{}] {}\n" + 
@@ -29,7 +29,7 @@ public class ApplicationLogger {
     }
 
     //request, message, user uid, statusCode, 
-    public static void requestLog(HttpServletRequest request, String message, String userUID,int statusCode){
+    public static void requestLogFilter(HttpServletRequest request, String message, String userUID,int statusCode){
         String clientIP = request.getRemoteAddr();
         String path = request.getServletPath();
         logger.info("REQUEST[{}] {}\n" + 
@@ -39,7 +39,7 @@ public class ApplicationLogger {
     }
 
     //request, message, statusCode, access token authHeader, refresh token authHeader
-    public static void requestLog(HttpServletRequest request, String message, int statusCode, String accessAuthHeader, String refreshAuthHeader){
+    public static void requestLogFilter(HttpServletRequest request, String message, int statusCode, String accessAuthHeader, String refreshAuthHeader){
         String clientIP = request.getRemoteAddr();
         String path = request.getServletPath();
         logger.info("REQUEST[{}] {}\n" + 
@@ -50,7 +50,7 @@ public class ApplicationLogger {
     }
 
     //request, message, statusCode, access token authHeader, user, validation status, exception
-    public static void requestLog(HttpServletRequest request, String message, int statusCode, String authHeader, String user, String validationStatus, String exception){
+    public static void requestLogFilter(HttpServletRequest request, String message, int statusCode, String authHeader, String user, String validationStatus, String exception){
         String clientIP = request.getRemoteAddr();
         String path = request.getServletPath();
         logger.info("REQUEST[{}] {}\n" + 
@@ -63,7 +63,7 @@ public class ApplicationLogger {
     }
     
     //request, message, statusCode, access token authHeader, refresh token authHeader, user, validation status, exception
-    public static void requestLog(HttpServletRequest request, String message, int statusCode, String accessAuthHeader, String refreshAuthHeader, String user, String validationStatus, String exception){
+    public static void requestLogFilter(HttpServletRequest request, String message, int statusCode, String accessAuthHeader, String refreshAuthHeader, String user, String validationStatus, String exception){
         String clientIP = request.getRemoteAddr();
         String path = request.getServletPath();
         logger.info("REQUEST[{}] {}\n" + 
@@ -77,7 +77,7 @@ public class ApplicationLogger {
     }
 
     //request, message, statusCode, access token authHeader, user, validation status
-    public static void requestLog(HttpServletRequest request, String message, int statusCode, String authHeader, String user, String validationStatus){
+    public static void requestLogFilter(HttpServletRequest request, String message, int statusCode, String authHeader, String user, String validationStatus){
         String clientIP = request.getRemoteAddr();
         String path = request.getServletPath();
         logger.info("REQUEST[{}] {}\n" + 
@@ -88,10 +88,55 @@ public class ApplicationLogger {
                     "   ->status: {}\n", statusCode, message, path, authHeader, clientIP, user, validationStatus);
     }
 
+    //request, message, access token authHeader, user, validation status
+    public static void requestLogFilter(HttpServletRequest request, String message, String authHeader, String user, String validationStatus){
+        String clientIP = request.getRemoteAddr();
+        String path = request.getServletPath();
+        logger.info("REQUEST[-] {}\n" + 
+                    "   ->path: {}\n" +
+                    "   ->authHeader: {}\n" +
+                    "   ->clientIP: {}\n" +
+                    "   ->user: {}\n" + 
+                    "   ->status: {}\n",  message, path, authHeader, clientIP, user, validationStatus);
+    }
+
+    
+
     public static void websocketConnectionLog(String message, String user, String accessorCommand, String channel, String token){
         logger.info("WebSocket Connection[{}] {}\n" + 
                     "   ->user: {}\n" +
                     "   ->token: {}\n" +
                     "   ->channel: {}\n", accessorCommand, message, user, token, channel);
+    }
+
+    //request, message, statusCode, access token authHeader
+    public static void websocketConnectionLog(HttpServletRequest request, String message, int statusCode, String authHeader){
+        String clientIP = request.getRemoteAddr();
+        String path = request.getServletPath();
+        logger.info("REQUEST[{}] {}\n" + 
+                    "   ->path: {}\n" +
+                    "   ->authHeader: {}\n" +
+                    "   ->clientIP: {}\n", statusCode, message, path, authHeader, clientIP);
+    }
+
+    //request, message, user, statusCode, 
+    public static void requestLog(HttpServletRequest request, String message, String user, int statusCode){
+        String clientIP = request.getRemoteAddr();
+        String path = request.getServletPath();
+        logger.info("REQUEST[{}] {}\n" + 
+                    "   ->path: {}\n" +
+                    "   ->userUID: {}\n" +
+                    "   ->clientIP: {}\n", statusCode, message, path, user, clientIP);
+    }
+
+    //request, message, user, statusCode, exception
+    public static void requestLog(HttpServletRequest request, String message, String user, int statusCode, String exception){
+        String clientIP = request.getRemoteAddr();
+        String path = request.getServletPath();
+        logger.info("REQUEST[{}] {}\n" + 
+                    "   ->path: {}\n" +
+                    "   ->userUID: {}\n" +
+                    "   ->clientIP: {}\n" +
+                    "   ->exception: {}\n", statusCode, message, path, user, clientIP, exception);
     }
 }

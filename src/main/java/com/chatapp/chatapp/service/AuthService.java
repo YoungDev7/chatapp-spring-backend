@@ -1,4 +1,4 @@
-package com.chatapp.chatapp.auth;
+package com.chatapp.chatapp.service;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -7,16 +7,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.chatapp.chatapp.DTO.AuthRequest;
+import com.chatapp.chatapp.DTO.AuthResponse;
 import com.chatapp.chatapp.entity.Token;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.IUserRepository;
 import com.chatapp.chatapp.repository.TokenRepository;
-import com.chatapp.chatapp.util.ApplicationLogger;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -38,15 +36,13 @@ public class AuthService {
             revokeAllUserTokens(user);
             saveUserToken(user, refreshToken);
             
-            HttpServletRequest servletRequest = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-            ApplicationLogger.requestLog(servletRequest, "user authenticated", user.getUid().toString(), 200);
             return new AuthResponse(jwtToken, refreshToken);
         }catch(BadCredentialsException e){
             throw e;
         }
     }
 
-    public AuthResponse refreshToken(){
+    public AuthResponse refreshToken() throws IllegalStateException{
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         User user;
@@ -54,15 +50,10 @@ public class AuthService {
         try{
             user = repository.findUserByEmail(username).orElseThrow(() -> new IllegalStateException("user not found: " + username));
         }catch (IllegalStateException e){
-            HttpServletRequest servletRequest = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-            ApplicationLogger.requestLog(servletRequest, "user not found, how did we get here?", username, 403);
             throw e;
         }
 
         var newAccessToken = jwtService.generateToken(user);
-
-        HttpServletRequest servletRequest = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        ApplicationLogger.requestLog(servletRequest, "token refreshed", user.getUid().toString(), 200);
 
         return new AuthResponse(newAccessToken, null);
     }

@@ -1,4 +1,4 @@
-package com.chatapp.chatapp.auth;
+package com.chatapp.chatapp.service;
 
 import java.security.Key;
 import java.util.Date;
@@ -8,6 +8,8 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+
+import com.chatapp.chatapp.auth.JwtValidationResult;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
