@@ -25,13 +25,14 @@ import lombok.RequiredArgsConstructor;
 public class Config {
 
     private final IUserRepository userRepository;
+    private final IMessageRepository messageRepository;
 
     @Bean
     CommandLineRunner commandLineRunner(IMessageRepository messageRepository, IUserRepository userRepository){
         return args ->{
-            Message testMessage = new Message("Hello, World!", "John");
-            User testUser = new User("Mike", "password123", "mikehock@mail.com");
-            //repository.save(testMessage);
+            Message testMessage = new Message("Hello, World!", "mike hock");
+            User testUser = new User("mike hock", "$2a$10$pxgmNQ6he.j.flCu2gxpOeAmnj3sn55h5mFc5zW/gGLbNias1GmRe", "mikehock@email.com");
+            //messageRepository.save(testMessage);
             //userRepository.save(testUser);
         };
     }

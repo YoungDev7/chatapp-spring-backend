@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.chatapp.chatapp.auth.JwtValidationResult;
+import com.chatapp.chatapp.util.ApplicationLogger;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -55,6 +56,8 @@ public class JwtService {
                 .build();
                 
     } catch (io.jsonwebtoken.ExpiredJwtException e) {
+        ApplicationLogger.debugLog("Token expired");  
+
         return JwtValidationResult.builder()
                 .valid(false)  
                 .expired(true)

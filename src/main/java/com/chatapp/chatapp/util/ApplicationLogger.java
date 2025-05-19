@@ -139,4 +139,8 @@ public class ApplicationLogger {
                     "   ->clientIP: {}\n" +
                     "   ->exception: {}\n", statusCode, message, path, user, clientIP, exception);
     }
+
+    public static void debugLog(String message){
+        logger.debug("DEBUG: {}", message);
+    }
 }
