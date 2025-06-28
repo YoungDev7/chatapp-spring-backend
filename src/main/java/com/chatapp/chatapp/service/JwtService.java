@@ -6,11 +6,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.chatapp.chatapp.auth.JwtValidationResult;
-import com.chatapp.chatapp.util.ApplicationLogger;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -29,7 +29,18 @@ public class JwtService {
   @Value("${application.security.jwt.refresh-token.expiration}")
   private long refreshExpiration;
 
-  
+  public ResponseCookie createRefreshTokenCookie(String refreshToken) {
+    ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+        .httpOnly(true)
+        .secure(true)
+        .path("/api/v1/auth/refresh")
+        .maxAge(refreshExpiration)
+        .sameSite("Strict")
+        .build();
+
+    return refreshCookie;
+  }
+
   public String generateToken(UserDetails userDetails) {
     return buildToken(new HashMap<>(), userDetails, jwtExpiration);
   }
@@ -56,8 +67,6 @@ public class JwtService {
                 .build();
                 
     } catch (io.jsonwebtoken.ExpiredJwtException e) {
-        ApplicationLogger.debugLog("Token expired");  
-
         return JwtValidationResult.builder()
                 .valid(false)  
                 .expired(true)

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.chatapp.chatapp.DTO.AuthRequest;
 import com.chatapp.chatapp.DTO.AuthResponse;
+import com.chatapp.chatapp.DTO.TokenDTO;
 import com.chatapp.chatapp.entity.Token;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.IUserRepository;
@@ -27,7 +28,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    public AuthResponse authenticate(AuthRequest request) throws BadCredentialsException {
+    public TokenDTO authenticate(AuthRequest request) throws BadCredentialsException {
         try{
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
             var user = (User) authentication.getPrincipal();
@@ -35,8 +36,10 @@ public class AuthService {
             var refreshToken = jwtService.generateRefreshToken(user);
             revokeAllUserTokens(user);
             saveUserToken(user, refreshToken);
+            var refreshCookie = jwtService.createRefreshTokenCookie(refreshToken);
+
+            return new TokenDTO(jwtToken, refreshCookie);
             
-            return new AuthResponse(jwtToken, refreshToken);
         }catch(BadCredentialsException e){
             throw e;
         }
@@ -55,7 +58,7 @@ public class AuthService {
 
         var newAccessToken = jwtService.generateToken(user);
 
-        return new AuthResponse(newAccessToken, null);
+        return new AuthResponse(newAccessToken);
     }
 
     private void saveUserToken(User user, String jwtToken) {

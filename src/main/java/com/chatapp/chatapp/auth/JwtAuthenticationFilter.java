@@ -17,6 +17,7 @@ import com.chatapp.chatapp.util.ApplicationLogger;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -43,23 +44,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
       
 
       final String authHeader = request.getHeader("Authorization");
-      final String refreshHeader = request.getHeader("X-Refresh-Token"); //header for refresh token
+      String refreshToken = null;
+      
+      // Extract refresh token from cookie
+      if (request.getCookies() != null) {
+        for (Cookie cookie : request.getCookies()) {
+          if ("refreshToken".equals(cookie.getName())) {
+            refreshToken = cookie.getValue();
+            break;
+          }
+        }
+      }
+      
       
       // Handle case where no auth headers are present
-      if (authHeader == null && refreshHeader == null) {
+      if (authHeader == null && refreshToken == null) {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().write("Authorization header missing");
-        ApplicationLogger.requestLogFilter(request, "Authorization header missing", HttpServletResponse.SC_UNAUTHORIZED, null);
+        response.getWriter().write("Authorization header missing and no refresh token in cookies");
+        ApplicationLogger.requestLogFilter(request, "Authorization header missing and no refresh token in cookies", HttpServletResponse.SC_UNAUTHORIZED, null);
         return; 
       }
       //
       //ONLY ACCESS TOKEN
       //
-      if(authHeader != null && refreshHeader == null){
+      if(authHeader != null && refreshToken == null){
         if (!authHeader.startsWith("Bearer ")) {
           response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
           response.getWriter().write("Invalid authorization format");
           ApplicationLogger.requestLogFilter(request, "Invalid authorization format (missing Bearer)", HttpServletResponse.SC_UNAUTHORIZED, authHeader);
+          return; 
+        }
+
+        //if refresh header is null while sending request to /refresh endpoint this if catches it 
+        if (request.getServletPath().contains("/api/v1/auth/refresh")) {
+          response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+          response.getWriter().write("missing refresh token");
+          ApplicationLogger.requestLogFilter(request, "missing refresh token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshToken);
           return; 
         }
 
@@ -99,19 +119,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
       //
       // REFRESH & ACCESS TOKEN
       //
-      if(authHeader != null && refreshHeader != null){
+      if(authHeader != null && refreshToken != null){
 
-        if ((authHeader == null || !authHeader.startsWith("Bearer ")) && (refreshHeader == null || !refreshHeader.startsWith("Bearer "))) {
+        if (!authHeader.startsWith("Bearer ")) {
           response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
           response.getWriter().write("Invalid authorization format");
-          ApplicationLogger.requestLogFilter(request, "Authorization header missing", HttpServletResponse.SC_UNAUTHORIZED, null, null);
+          ApplicationLogger.requestLogFilter(request, "Invalid authorization format (missing Bearer)", HttpServletResponse.SC_UNAUTHORIZED, null, null);
           return; 
         }
 
         if (!request.getServletPath().contains("/api/v1/auth/refresh")) {
           response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
           response.getWriter().write("wrong endpoint");
-          ApplicationLogger.requestLogFilter(request, "wrong endpoint", HttpServletResponse.SC_BAD_REQUEST, authHeader, refreshHeader);
+          ApplicationLogger.requestLogFilter(request, "wrong endpoint", HttpServletResponse.SC_BAD_REQUEST, authHeader, refreshToken);
           return; 
         }
 
@@ -128,7 +148,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             } catch (UsernameNotFoundException e){
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
               response.getWriter().write("Invalid token " + validationResultAccess.getStatus());
-              ApplicationLogger.requestLogFilter(request, "Invalid access token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshHeader, validationResultAccess.getUsername(), validationResultAccess.getStatus().toString(), e.getMessage());
+              ApplicationLogger.requestLogFilter(request, "Invalid access token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshToken, validationResultAccess.getUsername(), validationResultAccess.getStatus().toString(), e.getMessage());
               return;
             }
 
@@ -137,13 +157,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             }else {
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
               response.getWriter().write("Invalid token " + validationResultAccess.getStatus());
-              ApplicationLogger.requestLogFilter(request, "Invalid access token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshHeader, validationResultAccess.getUsername(), validationResultAccess.getStatus().toString());
+              ApplicationLogger.requestLogFilter(request, "Invalid access token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshToken, validationResultAccess.getUsername(), validationResultAccess.getStatus().toString());
               return; 
             }
         }
 
         //REFRESH TOKEN
-        final String refreshToken = refreshHeader.substring(7);
         UserDetails userDetailsRefresh;
         JwtValidationResult validationResultRefresh = jwtService.validateToken(refreshToken);	
         
@@ -153,7 +172,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         } catch (UsernameNotFoundException e){
           response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
           response.getWriter().write("Invalid token " + validationResultRefresh.getStatus());
-          ApplicationLogger.requestLogFilter(request, "Invalid refresh token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshHeader, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString(), e.getMessage());
+          ApplicationLogger.requestLogFilter(request, "Invalid refresh token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshToken, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString(), e.getMessage());
           return;
         }
 
@@ -167,7 +186,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         if(!validationResultRefresh.getUsername().equals(validationResultAccess.getUsername())){
           response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
           response.getWriter().write("Unauthorized tokens");
-          ApplicationLogger.requestLogFilter(request, "Token holders dont match", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshHeader);
+          ApplicationLogger.requestLogFilter(request, "Token holders dont match", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshToken);
           return;
         }
 
@@ -179,11 +198,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
                 
             if (validationResultRefresh.isValid() && isTokenInDatabase) {
                 setAuthentication(request, userDetailsRefresh);
-                ApplicationLogger.requestLogFilter(request, "Valid refresh and access token", HttpServletResponse.SC_OK, authHeader, refreshHeader, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString());
+                ApplicationLogger.requestLogFilter(request, "Valid refresh and access token", authHeader, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString());
             }else {
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
               response.getWriter().write("Invalid token " + validationResultRefresh.getStatus());
-              ApplicationLogger.requestLogFilter(request, "Invalid refresh token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshHeader, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString());
+              ApplicationLogger.requestLogFilter(request, "Invalid refresh token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshToken, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString());
               return; 
             }
         }

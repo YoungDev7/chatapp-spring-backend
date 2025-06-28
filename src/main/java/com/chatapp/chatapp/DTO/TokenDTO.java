@@ -1,6 +1,6 @@
 package com.chatapp.chatapp.DTO;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.http.ResponseCookie;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthResponse {
-    
-    @JsonProperty("access_token")
+public class TokenDTO {
     private String accessToken;
+    private ResponseCookie refreshCookie;
 }

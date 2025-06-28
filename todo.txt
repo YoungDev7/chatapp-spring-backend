@@ -3,13 +3,16 @@ remove I in repository names
 log all requests
 make it so that access tokens dont requre database query
 add proper logging (library)
-unit tests and other kind of tests (research)
+! unit tests and other kind of tests (research) 
 configure CORS and CSRF
+flyway migrations
+logout endpoint
 
 frontend: state management
 
-right now: refresh request is not being fired, user is not being logged off when token is invalid
- shouldnt get rid of token from local storage before refresh request has been fired
-
 do leetcode
 docker
+
+right now: 
+logic that checks wheter or not refresh token is still valid while expired is wrong
+unit tests, test cases, spousteni testu kdyz pisu kod
