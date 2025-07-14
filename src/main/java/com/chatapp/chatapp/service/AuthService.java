@@ -47,10 +47,11 @@ public class AuthService {
 
     public AuthResponse refreshToken() throws IllegalStateException{
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+        String username = authentication.getPrincipal() instanceof User ? ((User) authentication.getPrincipal()).getEmail() : null;
         User user;
 
         try{
+            //we want to make sure the user is in database so we cant rely on authentication.getPrincipal() directly
             user = repository.findUserByEmail(username).orElseThrow(() -> new IllegalStateException("user not found: " + username));
         }catch (IllegalStateException e){
             throw e;
