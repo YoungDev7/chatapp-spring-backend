@@ -1,6 +1,8 @@
 package com.chatapp.chatapp.service;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -36,7 +38,7 @@ public class MessageService {
 
         if(userOptional.isPresent()){
             messageRepository.save(message);
-            //websocket
+            //websocket (handled in controller)
             //messagingTemplate.convertAndSend("/topic/messages", message);
         }else {
             throw new IllegalStateException("user not found in database, name: " + message.getSender());

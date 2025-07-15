@@ -34,10 +34,11 @@ public class JwtService {
         .httpOnly(true)
         .secure(true)
         .path("/api/v1/auth/refresh")
-        .maxAge(refreshExpiration)
+        .maxAge(refreshExpiration / 1000) // Convert seconds to milliseconds
         .sameSite("Strict")
         .build();
 
+    
     return refreshCookie;
   }
 
@@ -57,13 +58,12 @@ public class JwtService {
     try {
         Claims claims = extractAllClaims(token);
         String username = claims.getSubject();
-        boolean expired = claims.getExpiration().before(new Date());
         
         return JwtValidationResult.builder()
-                .valid(!expired)
-                .expired(expired)
+                .valid(true)
+                .expired(false)
                 .username(username)
-                .status(expired ? JwtValidationResult.ValidationStatus.EXPIRED : JwtValidationResult.ValidationStatus.VALID)
+                .status(JwtValidationResult.ValidationStatus.VALID)
                 .build();
                 
     } catch (io.jsonwebtoken.ExpiredJwtException e) {
@@ -109,7 +109,7 @@ public class JwtService {
                 .valid(false)
                 .expired(false)
                 .username(null)
-                .status(JwtValidationResult.ValidationStatus.INVALID_SIGNATURE)
+                .status(JwtValidationResult.ValidationStatus.INVALID)
                 .build();
     }catch(io.jsonwebtoken.JwtException e) {
         return JwtValidationResult.builder()

@@ -91,6 +91,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             
             try{
+              //database check TODO: remove
               userDetails = this.userDetailsService.loadUserByUsername(validationResult.getUsername());
             } catch (UsernameNotFoundException e){
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -175,7 +176,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
           ApplicationLogger.requestLogFilter(request, "Invalid refresh token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshToken, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString(), e.getMessage());
           return;
         }
-
+        
+        // duplicate code from above line 156 
         if(!isAccessTokenValid){
           response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
           response.getWriter().write("Invalid token " + validationResultAccess.getStatus());

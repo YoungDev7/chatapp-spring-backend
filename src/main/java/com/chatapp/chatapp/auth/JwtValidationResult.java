@@ -26,6 +26,7 @@ public class JwtValidationResult {
     }
     
     // This method lets you know if the token can be used despite being expired
+    // expiration is last thing that is checked in order. meaning that if ExpiredJwtException is thrown the token is only expired but valid 
     public boolean isUsableEvenIfExpired() {
         return username != null && (status == ValidationStatus.VALID || status == ValidationStatus.EXPIRED);
     }
