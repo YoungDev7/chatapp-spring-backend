@@ -34,10 +34,8 @@ public class AuthController {
         try{
             TokenDTO tokens = service.authenticate(request);
             
-            //attach refresh cookie to response
             httpServletResponse.addHeader(HttpHeaders.SET_COOKIE, tokens.getRefreshCookie().toString());
             
-            // Return only access token in response body
             AuthResponse response = new AuthResponse(tokens.getAccessToken());
             
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

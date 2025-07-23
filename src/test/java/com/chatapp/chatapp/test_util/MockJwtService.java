@@ -1,10 +1,11 @@
-package com.chatapp.chatapp;
+package com.chatapp.chatapp.test_util;
 
 import java.security.Key;
 import java.security.KeyPair;
 import java.util.Date;
 import java.util.Map;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import io.jsonwebtoken.Claims;
@@ -13,21 +14,27 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
-public final class TestJwtTokenService {
-    protected String secretKey = "mockSecretKeymockSecretKeymockSecretKeymockSecretKeymockSecretKey";
-    protected String fakeSecretKey = "fakeSecretKeyfakeSecretKeyfakeSecretKeyfakeSecretKeyfakeSecretKey";
-    protected long jwtExpiration = 3600000;
-    protected long refreshExpiration = 604800000; 
+//this service is needed to due to some methods in JwtService being private
+//also it helps to have methods that generate specific tokens for testing purposes
 
-    protected String generateValidToken(UserDetails userDetails) {
+@Profile("test")
+public final class MockJwtService {
+    //cannot read from @Value annotations in tests so we have to hardcode the values
+    //values have to correspond to  application-test.properties !!!
+    public String secretKey = "mockSecretKeymockSecretKeymockSecretKeymockSecretKeymockSecretKey";
+    public String fakeSecretKey = "fakeSecretKeyfakeSecretKeyfakeSecretKeyfakeSecretKeyfakeSecretKey";
+    public long jwtExpiration = 3600000;
+    public long refreshExpiration = 604800000; 
+
+    public String generateValidToken(UserDetails userDetails) {
         return buildToken(Map.of(), userDetails, jwtExpiration);
     }
 
-    protected String generateExpiredToken(UserDetails userDetails) {
+    public String generateExpiredToken(UserDetails userDetails) {
         return buildToken(Map.of(), userDetails, 0);
     }
 
-    protected String generateInvalidSignatureToken(UserDetails userDetails) {
+    public String generateInvalidSignatureToken(UserDetails userDetails) {
         return Jwts
         .builder()
         .setClaims(Map.of())
@@ -38,14 +45,14 @@ public final class TestJwtTokenService {
                 .compact();
     }
 
-    protected String generateMalformedToken(UserDetails userDetails) {
+    public String generateMalformedToken(UserDetails userDetails) {
         String token = buildToken(Map.of(), userDetails, jwtExpiration);
         char[] tokenChars = token.toCharArray();
         tokenChars[20] = 'X';  
         return new String(tokenChars);
     }
 
-    protected String generateUnsupportedToken(UserDetails userDetails) {
+    public String generateUnsupportedToken(UserDetails userDetails) {
         try {
             // Generate RSA key pair
             KeyPair keyPair = Keys.keyPairFor(SignatureAlgorithm.RS256);
@@ -60,9 +67,10 @@ public final class TestJwtTokenService {
             throw new RuntimeException("Failed to generate unsupported token", e);
         }
     }
+
         
 
-    protected String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
+    public String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
         return Jwts
         .builder()
         .setClaims(extraClaims)
@@ -73,7 +81,7 @@ public final class TestJwtTokenService {
                 .compact();
     }
 
-    protected Claims extractAllClaims(String token) throws io.jsonwebtoken.JwtException {
+    public Claims extractAllClaims(String token) throws io.jsonwebtoken.JwtException {
         return Jwts
             .parserBuilder()
             .setSigningKey(getSignInKey())
@@ -82,12 +90,12 @@ public final class TestJwtTokenService {
             .getBody();
     }
 
-    protected Key getSignInKey() {
+    public Key getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    protected Key getFakeSignInKey() {
+    public Key getFakeSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(fakeSecretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }

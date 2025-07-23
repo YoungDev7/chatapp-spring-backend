@@ -13,14 +13,17 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseCookie;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.chatapp.chatapp.auth.JwtValidationResult;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.service.JwtService;
+import com.chatapp.chatapp.test_util.MockJwtService;
 
 import io.jsonwebtoken.Claims;
 
+@ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
 public class JwtServiceTest {
 
@@ -29,23 +32,26 @@ public class JwtServiceTest {
     
     private String mockRefreshToken;
     private String mockJwtToken;
-    private TestJwtTokenService testJwtTokenProvider;
+    private MockJwtService mockJwtService;
     private User mockUser;
 
     @Spy
     @InjectMocks
     private JwtService jwtService;
+
     
     @BeforeEach
     void setUp() {   
-        testJwtTokenProvider = new TestJwtTokenService();
+        mockJwtService = new MockJwtService();
 
         mockJwtToken = "mock.jwt.token";
         mockRefreshToken = "mock.refresh.token";
 
-        ReflectionTestUtils.setField(jwtService, "refreshExpiration", testJwtTokenProvider.refreshExpiration);
-        ReflectionTestUtils.setField(jwtService, "jwtExpiration", testJwtTokenProvider.jwtExpiration);
-        ReflectionTestUtils.setField(jwtService, "secretKey", testJwtTokenProvider.secretKey);
+        // @Value annotations are not being read so we have to map it to a normal variable which is also reason why MockJwtService
+        //doesnt use @Value annotations 
+        ReflectionTestUtils.setField(jwtService, "refreshExpiration", mockJwtService.refreshExpiration);
+        ReflectionTestUtils.setField(jwtService, "jwtExpiration", mockJwtService.jwtExpiration);
+        ReflectionTestUtils.setField(jwtService, "secretKey", mockJwtService.secretKey);
 
         mockUser = new User("testUser", "password123", "test@example.com");
     }
@@ -66,7 +72,7 @@ public class JwtServiceTest {
 
     @Test
     void shouldSuccessfullyValidateToken(){
-        String validToken = testJwtTokenProvider.generateValidToken(mockUser);
+        String validToken = mockJwtService.generateValidToken(mockUser);
         var validationResult = jwtService.validateToken(validToken);
         
         System.out.println(validToken);
@@ -79,7 +85,7 @@ public class JwtServiceTest {
 
     @Test
     void shouldReturnExpiredStatus() {
-        String expiredToken = testJwtTokenProvider.generateExpiredToken(mockUser);
+        String expiredToken = mockJwtService.generateExpiredToken(mockUser);
     
         System.out.println(expiredToken);        
 
@@ -92,7 +98,7 @@ public class JwtServiceTest {
 
     @Test
     void shouldReturnInvalidSignatureStatus() {
-        String invalidSignatureToken = testJwtTokenProvider.generateInvalidSignatureToken(mockUser);
+        String invalidSignatureToken = mockJwtService.generateInvalidSignatureToken(mockUser);
     
         System.out.println(invalidSignatureToken);
 
@@ -104,7 +110,7 @@ public class JwtServiceTest {
 
     @Test
     void shouldReturnMalformedStatus() {
-        String malformedToken = testJwtTokenProvider.generateMalformedToken(mockUser);
+        String malformedToken = mockJwtService.generateMalformedToken(mockUser);
     
         System.out.println(malformedToken);
 
@@ -116,7 +122,7 @@ public class JwtServiceTest {
 
     @Test
     void shouldReturnUnsupportedStatus() {
-        String unsupportedToken = testJwtTokenProvider.generateUnsupportedToken(mockUser);
+        String unsupportedToken = mockJwtService.generateUnsupportedToken(mockUser);
     
         System.out.println(unsupportedToken);
 

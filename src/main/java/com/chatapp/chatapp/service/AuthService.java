@@ -62,6 +62,7 @@ public class AuthService {
         return new AuthResponse(newAccessToken);
     }
 
+    //TODO: there is no logic that changes the expired status when the token expires
     private void saveUserToken(User user, String jwtToken) {
         var token = Token.builder()
             .user(user)

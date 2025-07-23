@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.chatapp.chatapp.entity.Token;
+import com.chatapp.chatapp.entity.User;
 
 @Repository
 public interface TokenRepository extends JpaRepository<Token, Integer> {
@@ -20,5 +21,9 @@ public interface TokenRepository extends JpaRepository<Token, Integer> {
     List<Token> findAllValidTokenByUser(Long id);
 
     Optional<Token> findByToken(String token);
-    
+
+    void deleteByUser(User user);
+
+    void deleteByToken(String token);
+  
 }

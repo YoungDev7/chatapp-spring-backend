@@ -34,7 +34,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
     throws ServletException, IOException {
-         
+        
+      //TODO: refactor ? authentication is based on if both tokens are present or not, shouldnt it be determined by target API endpoint?
+
       // Skip authentication for login endpoint
       if (request.getServletPath().contains("/api/v1/auth/authenticate") || request.getServletPath().contains("/ws")) {
         ApplicationLogger.requestLogFilter(request, "skipping authentication");
@@ -137,6 +139,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         }
 
         //ACCESS TOKEN
+        //TODO: validating access token is duplicate code from above, should be refactored
         final String jwt = authHeader.substring(7);
         UserDetails userDetails;
         JwtValidationResult validationResultAccess = jwtService.validateToken(jwt);
@@ -202,9 +205,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
                 setAuthentication(request, userDetailsRefresh);
                 ApplicationLogger.requestLogFilter(request, "Valid refresh and access token", authHeader, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString());
             }else {
+              
+              // List<Token> validTokens = tokenRepository.findAllValidTokenByUser(((User)userDetailsRefresh).getUid());
+              // ApplicationLogger.debugLog(validTokens.size() + " valid tokens found in filter " + ((User)userDetailsRefresh).getUid());
+              // ApplicationLogger.debugLog(tokenRepository.findByToken(refreshToken).toString() + " is refresh token in database");
+
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
               response.getWriter().write("Invalid token " + validationResultRefresh.getStatus());
-              ApplicationLogger.requestLogFilter(request, "Invalid refresh token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshToken, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString());
+              ApplicationLogger.requestLogFilter(request, "Invalid refresh token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshToken, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString(), "is in database: " + isTokenInDatabase);
               return; 
             }
         }

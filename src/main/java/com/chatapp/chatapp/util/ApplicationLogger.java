@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
  
 public class ApplicationLogger {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationLogger.class);
+
+    //TODO: refactor this class to use a more structured logging approach, possibly with MDC (Mapped Diagnostic Context) for better context in logs (copilot suggestion)
     
     //request, message
     public static void requestLogFilter(HttpServletRequest request, String message){
