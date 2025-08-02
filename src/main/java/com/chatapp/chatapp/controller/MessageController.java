@@ -1,5 +1,6 @@
 package com.chatapp.chatapp.controller;
 
+import java.security.Principal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,7 +8,6 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.chatapp.chatapp.entity.Message;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.service.MessageService;
+import com.chatapp.chatapp.util.ApplicationLogger;
 
 @RestController
 @RequestMapping("/api/v1/messages")
@@ -34,17 +35,25 @@ public class MessageController {
     // Secured WebSocket endpoint
     @MessageMapping("/chat") // where client broadcasts
     @SendTo("/topic/messages") // where server broadcasts
-    public Message handleMessage(@Payload Message message) {
-        // Get the authenticated user
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()) {
-            // You can validate that the message sender matches the authenticated user
-            User user = (User) auth.getPrincipal();
-            if (user.getName().equals(message.getSender())) {
-                messageService.postNewMessage(message);
-                return message;
+    public Message handleMessage(@Payload Message message, Principal principal) {
+        
+        if (principal != null) {
+            Authentication auth = (Authentication) principal;
+
+            if (auth.getPrincipal() instanceof User) {
+                User user = (User) auth.getPrincipal();
+                
+                if (user.getName().equals(message.getSender())) {
+                    messageService.postNewMessage(message);
+                    return message;
+                } else {
+                    ApplicationLogger.warningLog("user-sender mismatch: " + user.getName() + " != " + message.getSender());
+                }
             }
+        } else {
+            ApplicationLogger.errorLog("Principal is null in handleMessage sender: " + message.getSender());
         }
+
         return null;
     }
     

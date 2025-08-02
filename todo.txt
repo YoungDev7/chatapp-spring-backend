@@ -8,11 +8,10 @@ configure CORS and CSRF
 flyway migrations
 logout endpoint
 
-frontend: state management
+frontend: state management, port to typescript ?, tests, logout, register, use logged in user isntead of hardcoded one 
 
 do leetcode
 docker
 
 right now: 
-logic that checks wheter or not refresh token is still valid while expired is wrong
-unit tests, test cases, spousteni testu kdyz pisu kod
+for some reason sending messages queries database for user after authentication, it should only write

@@ -7,10 +7,10 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.chatapp.chatapp.auth.JwtValidationResult;
+import com.chatapp.chatapp.entity.User;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -42,16 +42,16 @@ public class JwtService {
     return refreshCookie;
   }
 
-  public String generateToken(UserDetails userDetails) {
-    return buildToken(new HashMap<>(), userDetails, jwtExpiration);
+  public String generateToken(User user) {
+    return buildToken(new HashMap<>(), user, jwtExpiration);
   }
   
-  public String generateToken(Map<String, Object> extraClaims,UserDetails userDetails) {
-    return buildToken(extraClaims, userDetails, jwtExpiration);
+  public String generateToken(Map<String, Object> extraClaims, User user) {
+    return buildToken(extraClaims, user, jwtExpiration);
   }
   
-  public String generateRefreshToken(UserDetails userDetails) {
-    return buildToken(new HashMap<>(), userDetails, refreshExpiration);
+  public String generateRefreshToken(User user) {
+    return buildToken(new HashMap<>(), user, refreshExpiration);
   }
 
   public JwtValidationResult validateToken(String token) {
@@ -119,13 +119,17 @@ public class JwtService {
                 .status(JwtValidationResult.ValidationStatus.INVALID)
                 .build();
     }
-}
+  }
 
-  private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
+  private String buildToken(Map<String, Object> extraClaims, User user, long expiration) {
+    Map<String, Object> claims = new HashMap<>(extraClaims);
+    claims.put("uid", user.getUid().toString());
+    claims.put("name", user.getName());
+
     return Jwts
     .builder()
-    .setClaims(extraClaims)
-    .setSubject(userDetails.getUsername())
+    .setClaims(claims)
+    .setSubject(user.getUsername())
             .setIssuedAt(new Date(System.currentTimeMillis()))
             .setExpiration(new Date(System.currentTimeMillis() + expiration))
             .signWith(getSignInKey(), SignatureAlgorithm.HS256)

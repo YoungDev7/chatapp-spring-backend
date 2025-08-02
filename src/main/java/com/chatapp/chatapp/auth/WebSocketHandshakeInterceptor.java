@@ -28,7 +28,7 @@ public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                   WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
 
-        logger.debug("beforeHandshake: {}", request);
+        //logger.debug("beforeHandshake: {}", request);
 
         if (request instanceof ServletServerHttpRequest) {
             URI uri = request.getURI();

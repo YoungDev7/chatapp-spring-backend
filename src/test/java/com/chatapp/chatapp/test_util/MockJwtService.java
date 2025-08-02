@@ -3,10 +3,12 @@ package com.chatapp.chatapp.test_util;
 import java.security.Key;
 import java.security.KeyPair;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.core.userdetails.UserDetails;
+
+import com.chatapp.chatapp.entity.User;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -26,39 +28,40 @@ public final class MockJwtService {
     public long jwtExpiration = 3600000;
     public long refreshExpiration = 604800000; 
 
-    public String generateValidToken(UserDetails userDetails) {
-        return buildToken(Map.of(), userDetails, jwtExpiration);
+    public String generateValidToken(User user) {
+        return buildToken(Map.of(), user, jwtExpiration);
     }
 
-    public String generateExpiredToken(UserDetails userDetails) {
-        return buildToken(Map.of(), userDetails, 0);
+    public String generateExpiredToken(User user) {
+        return buildToken(Map.of(), user, 0);
     }
 
-    public String generateInvalidSignatureToken(UserDetails userDetails) {
+    public String generateInvalidSignatureToken(User user) {
         return Jwts
         .builder()
-        .setClaims(Map.of())
-        .setSubject(userDetails.getUsername())
+        .setClaims(getDefaultClaims(user))
+        .setSubject(user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getFakeSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String generateMalformedToken(UserDetails userDetails) {
-        String token = buildToken(Map.of(), userDetails, jwtExpiration);
+    public String generateMalformedToken(User user) {
+        String token = buildToken(Map.of(), user, jwtExpiration);
         char[] tokenChars = token.toCharArray();
         tokenChars[20] = 'X';  
         return new String(tokenChars);
     }
 
-    public String generateUnsupportedToken(UserDetails userDetails) {
+    public String generateUnsupportedToken(User user) {
         try {
             // Generate RSA key pair
             KeyPair keyPair = Keys.keyPairFor(SignatureAlgorithm.RS256);
             
             return Jwts.builder()
-                .setSubject(userDetails.getUsername())
+                .setClaims(getDefaultClaims(user))
+                .setSubject(user.getUsername())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(keyPair.getPrivate(), SignatureAlgorithm.RS256) // RSA algorithm
@@ -70,11 +73,15 @@ public final class MockJwtService {
 
         
 
-    public String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
+    public String buildToken(Map<String, Object> extraClaims, User user, long expiration) {
+        Map<String, Object> claims = new HashMap<>(extraClaims);
+        claims.put("uid", user.getUid().toString());
+        claims.put("name", user.getName());
+
         return Jwts
         .builder()
-        .setClaims(extraClaims)
-        .setSubject(userDetails.getUsername())
+        .setClaims(claims)
+        .setSubject(user.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
@@ -98,5 +105,12 @@ public final class MockJwtService {
     public Key getFakeSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(fakeSecretKey);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+    
+    private Map<String, Object> getDefaultClaims(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("uid", user.getUid().toString());
+        claims.put("name", user.getName());
+        return claims;
     }
 }

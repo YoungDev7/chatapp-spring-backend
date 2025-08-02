@@ -205,11 +205,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
                 setAuthentication(request, userDetailsRefresh);
                 ApplicationLogger.requestLogFilter(request, "Valid refresh and access token", authHeader, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString());
             }else {
-              
-              // List<Token> validTokens = tokenRepository.findAllValidTokenByUser(((User)userDetailsRefresh).getUid());
-              // ApplicationLogger.debugLog(validTokens.size() + " valid tokens found in filter " + ((User)userDetailsRefresh).getUid());
-              // ApplicationLogger.debugLog(tokenRepository.findByToken(refreshToken).toString() + " is refresh token in database");
-
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
               response.getWriter().write("Invalid token " + validationResultRefresh.getStatus());
               ApplicationLogger.requestLogFilter(request, "Invalid refresh token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshToken, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString(), "is in database: " + isTokenInDatabase);

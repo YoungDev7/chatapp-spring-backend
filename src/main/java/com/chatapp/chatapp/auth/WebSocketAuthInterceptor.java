@@ -33,9 +33,12 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor  {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         
-        logger.debug("preSend: {}", accessor);
-
         if (accessor == null || !(StompCommand.CONNECT.equals(accessor.getCommand()))) {
+            // If user exists on accessor but not in SecurityContext, set it
+            if (accessor != null && accessor.getUser() != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                SecurityContextHolder.getContext().setAuthentication((UsernamePasswordAuthenticationToken) accessor.getUser());
+            }
+            
             return message;
         }
 

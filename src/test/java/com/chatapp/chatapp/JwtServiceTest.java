@@ -54,6 +54,7 @@ public class JwtServiceTest {
         ReflectionTestUtils.setField(jwtService, "secretKey", mockJwtService.secretKey);
 
         mockUser = new User("testUser", "password123", "test@example.com");
+        mockUser.setUid(1L);
     }
 
     //extractAllClaims and getSigningKey methods are called in validateToken so they are tested indirectly

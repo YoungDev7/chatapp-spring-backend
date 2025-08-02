@@ -145,4 +145,13 @@ public class ApplicationLogger {
     public static void debugLog(String message){
         logger.debug("DEBUG: {}", message);
     }
+
+    public static void warningLog(String message){
+        logger.warn("WARNING: {}", message);
+    }
+
+    public static void errorLog(String message){
+        logger.error("ERROR: {}", message);
+    }
+
 }
