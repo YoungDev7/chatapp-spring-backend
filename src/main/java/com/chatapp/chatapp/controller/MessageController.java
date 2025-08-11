@@ -43,11 +43,11 @@ public class MessageController {
             if (auth.getPrincipal() instanceof User) {
                 User user = (User) auth.getPrincipal();
                 
-                if (user.getName().equals(message.getSender())) {
+                if (user.getUid().equals(message.getSenderUid())) {
                     messageService.postNewMessage(message);
-                    return message;
+                    return message; //this broadcasts the message back to all subscribers
                 } else {
-                    ApplicationLogger.warningLog("user-sender mismatch: " + user.getName() + " != " + message.getSender());
+                    ApplicationLogger.warningLog("user-sender mismatch: " + user.getUid() + " != " + message.getSenderUid());
                 }
             }
         } else {

@@ -13,8 +13,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.chatapp.chatapp.entity.Message;
-import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.IMessageRepository;
 import com.chatapp.chatapp.repository.IUserRepository;
 
@@ -30,8 +28,8 @@ public class Config {
     @Bean
     CommandLineRunner commandLineRunner(IMessageRepository messageRepository, IUserRepository userRepository){
         return args ->{
-            Message testMessage = new Message("Hello, World!", "mike hock");
-            User testUser = new User("mike hock", "$2a$10$pxgmNQ6he.j.flCu2gxpOeAmnj3sn55h5mFc5zW/gGLbNias1GmRe", "mikehock@email.com");
+            // Message testMessage = new Message("Hello, World!", "mike hock");
+            // User testUser = new User("mike hock", "$2a$10$pxgmNQ6he.j.flCu2gxpOeAmnj3sn55h5mFc5zW/gGLbNias1GmRe", "mikehock@email.com");
             //messageRepository.save(testMessage);
             //userRepository.save(testUser);
         };

@@ -15,3 +15,9 @@ docker
 
 right now: 
 for some reason sending messages queries database for user after authentication, it should only write
+message user verification needs to be done via uid 
+
+frontend: doesnt redirect to login page (or some other) when server is down
+
+frontend: chatroom slice: each room will have id and array of messages, and then when user initially clicks on the room it will fetch the messages and put them in state
+

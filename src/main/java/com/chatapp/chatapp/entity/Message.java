@@ -22,9 +22,12 @@ public class Message {
     private String text;
     @Column(name = "SENDER")
     private String sender;
+    @Column(name = "SENDER_UID")
+    private Long senderUid;
 
-    public Message(String text, String sender) {
+    public Message(String text, String sender, Long senderUid) {
         this.text = text;
         this.sender = sender;
+        this.senderUid = senderUid;
     }
 }
