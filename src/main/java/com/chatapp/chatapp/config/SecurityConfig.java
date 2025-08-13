@@ -30,17 +30,7 @@ public class SecurityConfig {
     
     private static final String[] WHITE_LIST_URL = {
             "/api/v1/auth/authenticate",
-            "/api/v1/auth/refresh",
-            "/v2/api-docs",
-            "/v3/api-docs",
-            "/v3/api-docs/**",
-            "/swagger-resources",
-            "/swagger-resources/**",
-            "/configuration/ui",
-            "/configuration/security",
-            "/swagger-ui/**",
-            "/webjars/**",
-            "/swagger-ui.html",
+            "/api/v1/auth/refresh", 
             "/ws/**"};
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
@@ -55,7 +45,7 @@ public class SecurityConfig {
                     // Allow OPTIONS requests for all endpoints
                     req.requestMatchers(HttpMethod.OPTIONS, "/**")
                         .permitAll()
-                       .requestMatchers(WHITE_LIST_URL)
+                        .requestMatchers(WHITE_LIST_URL)
                         .permitAll()
                         .anyRequest()
                         .authenticated();

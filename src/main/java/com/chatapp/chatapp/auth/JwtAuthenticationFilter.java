@@ -37,6 +37,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         
       //TODO: refactor ? authentication is based on if both tokens are present or not, shouldnt it be determined by target API endpoint?
 
+      ApplicationLogger.debugLog("filter reached!!!");
+
       // Skip authentication for login endpoint
       if (request.getServletPath().contains("/api/v1/auth/authenticate") || request.getServletPath().contains("/ws")) {
         ApplicationLogger.requestLogFilter(request, "skipping authentication");
@@ -97,14 +99,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
               userDetails = this.userDetailsService.loadUserByUsername(validationResult.getUsername());
             } catch (UsernameNotFoundException e){
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-              response.getWriter().write("Invalid token " + validationResult.getStatus());
-              ApplicationLogger.requestLogFilter(request, "Invalid access token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, validationResult.getUsername(), validationResult.getStatus().toString(), e.getMessage());
+              response.getWriter().write("User not found");
+              ApplicationLogger.requestLogFilter(request, "invlaid token user not found", HttpServletResponse.SC_UNAUTHORIZED, authHeader, validationResult.getUsername(), validationResult.getStatus().toString(), e.getMessage());
               return;
             }
           
             // Only validate JWT signature and expiration, no database check
             if (validationResult.isValid()) {
               setAuthentication(request, userDetails);
+              //debug
               ApplicationLogger.requestLogFilter(request, "Valid access token", authHeader, validationResult.getUsername(), validationResult.getStatus().toString());
             } else {
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -139,7 +142,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         }
 
         //ACCESS TOKEN
-        //TODO: validating access token is duplicate code from above, should be refactored
+        //TODO: validating access token is duplicate code from above and logoutService, should be refactored
         final String jwt = authHeader.substring(7);
         UserDetails userDetails;
         JwtValidationResult validationResultAccess = jwtService.validateToken(jwt);
@@ -151,8 +154,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
               userDetails = this.userDetailsService.loadUserByUsername(validationResultAccess.getUsername());
             } catch (UsernameNotFoundException e){
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-              response.getWriter().write("Invalid token " + validationResultAccess.getStatus());
-              ApplicationLogger.requestLogFilter(request, "Invalid access token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshToken, validationResultAccess.getUsername(), validationResultAccess.getStatus().toString(), e.getMessage());
+              response.getWriter().write("user not found");
+              ApplicationLogger.requestLogFilter(request, "invalid access token user not found", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshToken, validationResultAccess.getUsername(), validationResultAccess.getStatus().toString(), e.getMessage());
               return;
             }
 
@@ -203,7 +206,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
                 
             if (validationResultRefresh.isValid() && isTokenInDatabase) {
                 setAuthentication(request, userDetailsRefresh);
-                ApplicationLogger.requestLogFilter(request, "Valid refresh and access token", authHeader, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString());
+                //debug
+                //ApplicationLogger.requestLogFilter(request, "Valid refresh and access token", authHeader, validationResultRefresh.getUsername(), validationResultRefresh.getStatus().toString());
             }else {
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
               response.getWriter().write("Invalid token " + validationResultRefresh.getStatus());

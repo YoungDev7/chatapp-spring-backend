@@ -75,7 +75,7 @@ public final class MockJwtService {
 
     public String buildToken(Map<String, Object> extraClaims, User user, long expiration) {
         Map<String, Object> claims = new HashMap<>(extraClaims);
-        claims.put("uid", user.getUid().toString());
+        claims.put("uid", user.getUid());
         claims.put("name", user.getName());
 
         return Jwts
@@ -109,7 +109,7 @@ public final class MockJwtService {
     
     private Map<String, Object> getDefaultClaims(User user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("uid", user.getUid().toString());
+        claims.put("uid", user.getUid());
         claims.put("name", user.getName());
         return claims;
     }

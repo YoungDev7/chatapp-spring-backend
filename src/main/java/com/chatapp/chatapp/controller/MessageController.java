@@ -47,7 +47,7 @@ public class MessageController {
                     messageService.postNewMessage(message);
                     return message; //this broadcasts the message back to all subscribers
                 } else {
-                    ApplicationLogger.warningLog("user-sender mismatch: " + user.getUid() + " != " + message.getSenderUid());
+                    ApplicationLogger.errorLog("user-sender mismatch: " + user.getUid() + " != " + message.getSenderUid());
                 }
             }
         } else {

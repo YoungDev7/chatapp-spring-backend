@@ -23,9 +23,9 @@ public class Message {
     @Column(name = "SENDER")
     private String sender;
     @Column(name = "SENDER_UID")
-    private Long senderUid;
+    private String senderUid;
 
-    public Message(String text, String sender, Long senderUid) {
+    public Message(String text, String sender, String senderUid) {
         this.text = text;
         this.sender = sender;
         this.senderUid = senderUid;

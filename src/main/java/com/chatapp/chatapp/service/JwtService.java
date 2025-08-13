@@ -123,7 +123,7 @@ public class JwtService {
 
   private String buildToken(Map<String, Object> extraClaims, User user, long expiration) {
     Map<String, Object> claims = new HashMap<>(extraClaims);
-    claims.put("uid", user.getUid().toString());
+    claims.put("uid", user.getUid());
     claims.put("name", user.getName());
 
     return Jwts

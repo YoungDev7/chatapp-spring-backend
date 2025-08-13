@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 import com.chatapp.chatapp.entity.User;
 
 @Repository
-public interface IUserRepository extends JpaRepository<User, Long>{
+public interface IUserRepository extends JpaRepository<User, String>{
     @NonNull
     List<User> findAll();
 
@@ -23,5 +23,5 @@ public interface IUserRepository extends JpaRepository<User, Long>{
     Optional<User> findUserByEmail(@Param("email") String email);
     
     @Query("SELECT u FROM User u WHERE u.uid = :uid")
-    Optional<User> findUserByUid(@Param("uid") Long uid);
+    Optional<User> findUserByUid(@Param("uid") String uid);
 }

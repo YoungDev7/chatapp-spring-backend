@@ -21,9 +21,9 @@ import lombok.NoArgsConstructor;
 @Table(name = "user")
 public class User implements UserDetails {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "UID")
-    private Long uid;
+    private String uid;
     @Column(name = "NAME")
     private String name;
     @Column(name = "PASSWORD")

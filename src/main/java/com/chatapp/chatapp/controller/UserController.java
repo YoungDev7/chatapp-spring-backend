@@ -38,12 +38,12 @@ public class UserController {
     }
 
     @DeleteMapping(path = "{uid}")
-    public void deleteUser(@PathVariable("uid") Long uid){
+    public void deleteUser(@PathVariable("uid") String uid){
         userService.deleteUser(uid);
     }
 
     @PutMapping(path = "{id}")
-    public void updateUser(@PathVariable("id") Long id, @RequestParam(required = false) String name, @RequestParam(required = false) String email, @RequestParam(required = false) String password){
+    public void updateUser(@PathVariable("id") String id, @RequestParam(required = false) String name, @RequestParam(required = false) String email, @RequestParam(required = false) String password){
         userService.updateUser(id, name, email, password);
     }
 }

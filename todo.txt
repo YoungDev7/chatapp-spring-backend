@@ -6,7 +6,7 @@ add proper logging (library)
 ! unit tests and other kind of tests (research) 
 configure CORS and CSRF
 flyway migrations
-logout endpoint
+
 
 frontend: state management, port to typescript ?, tests, logout, register, use logged in user isntead of hardcoded one 
 
@@ -15,9 +15,11 @@ docker
 
 right now: 
 for some reason sending messages queries database for user after authentication, it should only write
-message user verification needs to be done via uid 
+
+
 
 frontend: doesnt redirect to login page (or some other) when server is down
+            /validate request is sent on logout, it shouldnt
 
 frontend: chatroom slice: each room will have id and array of messages, and then when user initially clicks on the room it will fetch the messages and put them in state
 
