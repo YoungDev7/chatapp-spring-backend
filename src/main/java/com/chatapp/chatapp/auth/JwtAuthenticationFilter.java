@@ -37,10 +37,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         
       //TODO: refactor ? authentication is based on if both tokens are present or not, shouldnt it be determined by target API endpoint?
 
-      ApplicationLogger.debugLog("filter reached!!!");
-
-      // Skip authentication for login endpoint
-      if (request.getServletPath().contains("/api/v1/auth/authenticate") || request.getServletPath().contains("/ws")) {
+      // Skip authentication for certain endpoints
+      if (request.getServletPath().contains("/api/v1/auth/authenticate") || request.getServletPath().contains("/ws") || request.getServletPath().contains("/api/v1/auth/register")) {
         ApplicationLogger.requestLogFilter(request, "skipping authentication");
         filterChain.doFilter(request, response);
         return;
@@ -108,7 +106,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             if (validationResult.isValid()) {
               setAuthentication(request, userDetails);
               //debug
-              ApplicationLogger.requestLogFilter(request, "Valid access token", authHeader, validationResult.getUsername(), validationResult.getStatus().toString());
+              //ApplicationLogger.requestLogFilter(request, "Valid access token", authHeader, validationResult.getUsername(), validationResult.getStatus().toString());
             } else {
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
               response.getWriter().write("Invalid token " + validationResult.getStatus());

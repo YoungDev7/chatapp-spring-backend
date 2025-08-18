@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.chatapp.chatapp.DTO.AuthRequest;
 import com.chatapp.chatapp.DTO.AuthResponse;
+import com.chatapp.chatapp.DTO.RegisterRequest;
 import com.chatapp.chatapp.DTO.TokenDTO;
 import com.chatapp.chatapp.service.AuthService;
 import com.chatapp.chatapp.util.ApplicationLogger;
@@ -49,6 +50,30 @@ public class AuthController {
             ApplicationLogger.requestLog(httpServletRequest, "user login failed", request.getEmail(), 401, e.getMessage());
             
             return ResponseEntity.status(401).body("invalid email or password");
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
+        try{
+            service.register(request);
+            ApplicationLogger.requestLog(httpServletRequest, "user registered", request.getEmail(), 201);
+            return ResponseEntity.status(201).body("registration successful");
+        }catch (IllegalArgumentException e){
+            String message = e.getMessage();
+
+            if(message.equals("user with this email exists") || message.equals("user with this username exists")){
+                ApplicationLogger.requestLog(httpServletRequest, "registration failed" + message, request.getEmail(), 409);
+                return ResponseEntity.status(409).body(message);    
+            }
+
+            if(message.contains("Invalid email format: ") || message.equals("password or username is blank")){
+                ApplicationLogger.requestLog(httpServletRequest, "registration failed" + message, request.getEmail(), 400);
+                return ResponseEntity.status(400).body(message);
+            }
+            
+            ApplicationLogger.requestLog(httpServletRequest, "registration failed" + message, request.getEmail(), 403);
+            return ResponseEntity.status(403).body("registration fail");
         }
     }
 

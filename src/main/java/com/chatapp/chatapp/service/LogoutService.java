@@ -28,6 +28,7 @@ public class LogoutService implements LogoutHandler{
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
 
         final String authHeader = request.getHeader("Authorization");
+        
         try{
             if (authHeader == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

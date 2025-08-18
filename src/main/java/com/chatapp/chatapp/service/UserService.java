@@ -4,23 +4,21 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.IUserRepository;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
     
     private final IUserRepository userRepository;
-
-    @Autowired
-    public UserService(IUserRepository userRepository){
-        this.userRepository = userRepository;
-    }
+    private final PasswordEncoder passwordEncoder;
 
     //get users
     public List<User> getUsers(){
@@ -32,6 +30,10 @@ public class UserService {
         if (user.getUid() != null) {
             throw new IllegalArgumentException("New user should not have an ID set");
         }
+        
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
+
         System.out.println("Saving new user: " + user.getName());
         userRepository.save(user);
     }

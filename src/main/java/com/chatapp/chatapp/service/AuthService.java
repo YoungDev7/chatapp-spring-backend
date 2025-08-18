@@ -1,5 +1,8 @@
 package com.chatapp.chatapp.service;
 
+import java.util.Optional;
+
+import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -10,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.chatapp.chatapp.DTO.AuthRequest;
 import com.chatapp.chatapp.DTO.AuthResponse;
+import com.chatapp.chatapp.DTO.RegisterRequest;
 import com.chatapp.chatapp.DTO.TokenDTO;
 import com.chatapp.chatapp.entity.Token;
 import com.chatapp.chatapp.entity.User;
@@ -27,6 +31,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final UserService userService;
 
     public TokenDTO authenticate(AuthRequest request) throws BadCredentialsException {
         try{
@@ -42,6 +47,33 @@ public class AuthService {
             
         }catch(BadCredentialsException e){
             throw e;
+        }
+    }
+
+    public void register(RegisterRequest request) throws IllegalArgumentException{
+        Optional<User> userOptionalEmail = repository.findUserByEmail(request.getEmail());
+        Optional<User> userOptionalUsername = repository.findUserByName(request.getUsername());
+
+        if(userOptionalEmail.isPresent()){
+            throw new IllegalArgumentException("user with this email exists");
+        }
+        
+        if(userOptionalUsername.isPresent()){
+            throw new IllegalArgumentException("user with this username exists");
+        }
+
+        if (!isValidEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Invalid email format: " + request.getEmail());
+        }
+
+        if(request.getUsername().isBlank() || request.getPassword().isBlank()){
+            throw new IllegalArgumentException("password or username is blank");
+        }
+
+        try{
+            userService.postNewUser(new User(request.getUsername(), request.getPassword(), request.getEmail()));
+        }catch(IllegalArgumentException e){
+            throw new IllegalArgumentException(e.getMessage());
         }
     }
 
@@ -86,6 +118,11 @@ public class AuthService {
         });
 
         tokenRepository.saveAll(validUserTokens);
+    }
+
+    private boolean isValidEmail(String email) {
+        EmailValidator validator = EmailValidator.getInstance();
+        return validator.isValid(email);
     }
 
 }

@@ -6,7 +6,7 @@ add proper logging (library)
 ! unit tests and other kind of tests (research) 
 configure CORS and CSRF
 flyway migrations
-
+email confirmation and password reset using real email
 
 frontend: state management, port to typescript ?, tests, logout, register, use logged in user isntead of hardcoded one 
 
