@@ -22,13 +22,13 @@ import lombok.NoArgsConstructor;
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "UID")
+    @Column(name = "uid")
     private String uid;
-    @Column(name = "NAME")
+    @Column(name = "name")
     private String name;
-    @Column(name = "PASSWORD")
+    @Column(name = "password")
     private String password;
-    @Column(name = "EMAIL")
+    @Column(name = "email")
     private String email;
 
     public User(String name, String password, String email) {

@@ -154,4 +154,8 @@ public class ApplicationLogger {
         logger.error("ERROR: {}", message);
     }
 
+    public static void infoLog(String message){
+        logger.info("INFO: {}", message);
+    }
+
 }

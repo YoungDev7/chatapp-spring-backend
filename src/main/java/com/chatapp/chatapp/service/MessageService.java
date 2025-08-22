@@ -34,14 +34,14 @@ public class MessageService {
 
     //post new message to database after checking if user is valid 
     public void postNewMessage(Message message){
-        Optional<User> userOptional = userRepository.findUserByUid(message.getSenderUid());
+        Optional<User> userOptional = userRepository.findUserByUid(message.getSender().getUid());
 
         if(userOptional.isPresent()){
             messageRepository.save(message);
             //websocket (handled in controller)
             //messagingTemplate.convertAndSend("/topic/messages", message);
         }else {
-            throw new IllegalStateException("user not found in database, name: " + message.getSenderUid());
+            throw new IllegalStateException("user not found in database, name: " + message.getSender().getUid());
         }
         //System.out.println(message);
     }

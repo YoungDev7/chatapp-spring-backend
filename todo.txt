@@ -1,25 +1,28 @@
-implement refresh token rotation
-remove I in repository names
-log all requests
-make it so that access tokens dont requre database query
-add proper logging (library)
-! unit tests and other kind of tests (research) 
-configure CORS and CSRF
-flyway migrations
-email confirmation and password reset using real email
+backend:
+    implement refresh token rotation
+    rest of the unit and integration tests
+    configure CORS and CSRF
 
-frontend: state management, port to typescript ?, tests, logout, register, use logged in user isntead of hardcoded one 
+    remove I in repository names
+    log all requests
+    make it so that access tokens dont require database query
+    add proper logging (library)
+    email confirmation and password reset using real email
+    other todos
 
-do leetcode
-docker
+frontend: 
+    port to typescript ?, tests, other todos, toast popups
 
-right now: 
-for some reason sending messages queries database for user after authentication, it should only write
+!do leetcode
+!docker
+!python
+!study spring boot & other knowledge
 
+backend: for some reason sending messages queries database for user after authentication, it should only write
+frontend: 
+          2) /validate request is sent on logout, it shouldnt
+          3) chatroom slice: each room will have id and array of messages, and then when user 
+             initially clicks on the room it will fetch the messages and put them in state
+          4) responsivity
 
-
-frontend: doesnt redirect to login page (or some other) when server is down
-            /validate request is sent on logout, it shouldnt
-
-frontend: chatroom slice: each room will have id and array of messages, and then when user initially clicks on the room it will fetch the messages and put them in state
-
+Cloudy review

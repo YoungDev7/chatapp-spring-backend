@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.chatapp.chatapp.DTO.MessageRequest;
 import com.chatapp.chatapp.entity.Message;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.service.MessageService;
@@ -35,23 +36,24 @@ public class MessageController {
     // Secured WebSocket endpoint
     @MessageMapping("/chat") // where client broadcasts
     @SendTo("/topic/messages") // where server broadcasts
-    public Message handleMessage(@Payload Message message, Principal principal) {
+    public Message handleMessage(@Payload MessageRequest messageRequest, Principal principal) {
         
         if (principal != null) {
             Authentication auth = (Authentication) principal;
 
             if (auth.getPrincipal() instanceof User) {
-                User user = (User) auth.getPrincipal();
+                User authenticatedUser = (User) auth.getPrincipal();
                 
-                if (user.getUid().equals(message.getSenderUid())) {
+                if (authenticatedUser.getUid().equals(messageRequest.getSenderUid())) {
+                    Message message = new Message(messageRequest.getText(), authenticatedUser);
                     messageService.postNewMessage(message);
                     return message; //this broadcasts the message back to all subscribers
                 } else {
-                    ApplicationLogger.errorLog("user-sender mismatch: " + user.getUid() + " != " + message.getSenderUid());
+                    ApplicationLogger.errorLog("user-sender mismatch: " + authenticatedUser.getUid() + " != " + messageRequest.getSenderUid());
                 }
             }
         } else {
-            ApplicationLogger.errorLog("Principal is null in handleMessage sender: " + message.getSender());
+            ApplicationLogger.errorLog("Principal is null in handleMessage sender: " + messageRequest.getSenderUid());
         }
 
         return null;

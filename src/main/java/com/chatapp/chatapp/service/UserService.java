@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.IUserRepository;
+import com.chatapp.chatapp.util.ApplicationLogger;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class UserService {
         String encodedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
 
-        System.out.println("Saving new user: " + user.getName());
+        ApplicationLogger.infoLog("Saving new user: " + user.getName());
         userRepository.save(user);
     }
 

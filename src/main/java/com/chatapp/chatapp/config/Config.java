@@ -28,10 +28,14 @@ public class Config {
     @Bean
     CommandLineRunner commandLineRunner(IMessageRepository messageRepository, IUserRepository userRepository){
         return args ->{
-            // User testUser = new User("mike hock", "$2a$10$pxgmNQ6he.j.flCu2gxpOeAmnj3sn55h5mFc5zW/gGLbNias1GmRe", "mikehock@email.com");
-            // User testUser2 = new User("Gabe Itch", "$2a$10$MkiQd205Z6CYpRlNS2PKEeamsZTb/d9Jik.6IQZQkyPsPvgU37miW", "gabeitch@example.com");
+            // User testUser = new User("Test User One", this.passwordEncoder().encode("testuserone"), "test1@email.com");
+            // User testUser2 = new User("Test User Two", this.passwordEncoder().encode("testusertwo"), "test2@email.com");
             // userRepository.save(testUser);
             // userRepository.save(testUser2);
+            
+            // User testUser = userRepository.findUserByEmail("gabeitch@example.com").orElseThrow(() -> new IllegalStateException("user not found:"));
+            // Message testMessage = new Message("test", testUser);
+            // messageRepository.save(testMessage);
         };
     }
 
