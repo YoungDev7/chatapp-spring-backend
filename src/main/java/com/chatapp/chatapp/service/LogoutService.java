@@ -6,7 +6,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Service;
 
-import com.chatapp.chatapp.auth.JwtValidationResult;
+import com.chatapp.chatapp.DTO.JwtValidationResult;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.IUserRepository;
 import com.chatapp.chatapp.repository.TokenRepository;
@@ -24,6 +24,22 @@ public class LogoutService implements LogoutHandler{
     private final IUserRepository userRepository;
     private final JwtService jwtService;
 
+    /**
+     * Handles user logout by validating the JWT access token and revoking all user tokens.
+     * 
+     * The method expects an Authorization header with a Bearer token. If the token is valid
+     * and the user exists, all their tokens are invalidated to ensure complete logout.
+     * 
+     * @param request the HTTP servlet request containing the Authorization header with JWT token
+     * @param response the HTTP servlet response used to write status and messages
+     * @param authentication the current authentication object (may be null)
+     * 
+     * Response scenarios:
+     * - 200 OK: Logout successful, all tokens revoked
+     * - 401 UNAUTHORIZED: Missing/invalid authorization header, invalid token, or user not found
+     * 
+     * @see LogoutHandler#logout(HttpServletRequest, HttpServletResponse, Authentication)
+     */
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
 

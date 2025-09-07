@@ -16,7 +16,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.chatapp.chatapp.auth.JwtValidationResult;
+import com.chatapp.chatapp.DTO.JwtValidationResult;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.service.JwtService;
 import com.chatapp.chatapp.test_util.MockJwtService;
@@ -61,8 +61,10 @@ public class JwtServiceTest {
 
     @Test
     void shouldSuccessfullyCreateRefreshTokenCookie() {
+        //execute
         ResponseCookie refreshCookie = jwtService.createRefreshTokenCookie(mockRefreshToken);
         
+        //verify
         assertNotNull(refreshCookie);
         assertTrue(refreshCookie.isHttpOnly());
         assertTrue(refreshCookie.isSecure());
@@ -73,11 +75,14 @@ public class JwtServiceTest {
 
     @Test
     void shouldSuccessfullyValidateToken(){
+        //setup
         String validToken = mockJwtService.generateValidToken(mockUser);
+        //execute
         var validationResult = jwtService.validateToken(validToken);
         
         System.out.println(validToken);
 
+        //verify
         assertTrue(validationResult.isValid());
         assertFalse(validationResult.isExpired());
         assertEquals("test@example.com", validationResult.getUsername());
@@ -86,11 +91,15 @@ public class JwtServiceTest {
 
     @Test
     void shouldReturnExpiredStatus() {
+        //setup
         String expiredToken = mockJwtService.generateExpiredToken(mockUser);
     
         System.out.println(expiredToken);        
 
+        //execute
         var validationResult = jwtService.validateToken(expiredToken);
+
+        //verify
         assertFalse(validationResult.isValid());
         assertTrue(validationResult.isExpired());
         assertEquals("test@example.com", validationResult.getUsername());
@@ -99,11 +108,15 @@ public class JwtServiceTest {
 
     @Test
     void shouldReturnInvalidSignatureStatus() {
+        //setup
         String invalidSignatureToken = mockJwtService.generateInvalidSignatureToken(mockUser);
     
         System.out.println(invalidSignatureToken);
 
+        //execute
         var validationResult = jwtService.validateToken(invalidSignatureToken);
+
+        //verify
         assertFalse(validationResult.isValid());
         assertFalse(validationResult.isExpired());
         assertEquals(JwtValidationResult.ValidationStatus.INVALID_SIGNATURE, validationResult.getStatus());
@@ -111,11 +124,15 @@ public class JwtServiceTest {
 
     @Test
     void shouldReturnMalformedStatus() {
+        //setup
         String malformedToken = mockJwtService.generateMalformedToken(mockUser);
     
         System.out.println(malformedToken);
 
+        //execute
         var validationResult = jwtService.validateToken(malformedToken);
+        
+        //verify
         assertFalse(validationResult.isValid());
         assertFalse(validationResult.isExpired());
         assertEquals(JwtValidationResult.ValidationStatus.MALFORMED, validationResult.getStatus());
@@ -123,11 +140,15 @@ public class JwtServiceTest {
 
     @Test
     void shouldReturnUnsupportedStatus() {
+        //setup
         String unsupportedToken = mockJwtService.generateUnsupportedToken(mockUser);
     
         System.out.println(unsupportedToken);
 
+        //execute
         var validationResult = jwtService.validateToken(unsupportedToken);
+        
+        //verify
         assertFalse(validationResult.isValid());
         assertFalse(validationResult.isExpired());
         assertEquals(JwtValidationResult.ValidationStatus.UNSUPPORTED, validationResult.getStatus());
@@ -135,7 +156,12 @@ public class JwtServiceTest {
 
     @Test
     void shouldReturnIllegalStatus() {
+        //setup - using null token to trigger illegal argument exception
+        
+        //execute
         var validationResult = jwtService.validateToken(null);
+        
+        //verify
         assertFalse(validationResult.isValid());
         assertFalse(validationResult.isExpired());
         assertEquals(JwtValidationResult.ValidationStatus.ILLEGAL, validationResult.getStatus());
@@ -143,16 +169,20 @@ public class JwtServiceTest {
 
     @Test
     void shouldGenerateToken(){
+        //execute
         String token = jwtService.generateToken(mockUser);
         
+        //verify
         assertNotNull(token);
         assertTrue(token.startsWith("eyJ"));
     }
 
     @Test
     void shouuldGenerateRefreshToken() {
+        //execute
         String token = jwtService.generateRefreshToken(mockUser);
         
+        //verify
         assertNotNull(token);
         assertTrue(token.startsWith("eyJ"));
     }

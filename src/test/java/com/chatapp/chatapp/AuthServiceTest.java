@@ -72,17 +72,13 @@ class AuthServiceTest {
     // Initialize common test data before each test
     @BeforeEach
     void setUp() {
-        //request
         request = new AuthRequest("test@example.com", "password123");
         
-        //user
         mockUser = new User("testUser", "password123", "test@example.com");
         
-        //tokens
         mockJwtToken = "mock.jwt.token";
         mockRefreshToken = "mock.refresh.token";
         
-        //cookie
         mockRefreshCookie = ResponseCookie.from("mockRefreshToken", mockRefreshToken)
             .httpOnly(true)
             .secure(true)
@@ -91,7 +87,6 @@ class AuthServiceTest {
             .sameSite("Strict")
             .build();
 
-        // list of existing tokens
         existingTokens = List.of(
             Token.builder().token("old-token-1").expired(false).revoked(false).build(),
             Token.builder().token("old-token-2").expired(false).revoked(false).build()
@@ -100,6 +95,7 @@ class AuthServiceTest {
     
     @Test
     void shouldAuthenticateUserSuccessfully(){
+        //when
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(mockUser);
@@ -109,10 +105,12 @@ class AuthServiceTest {
         when(jwtService.generateRefreshToken(mockUser)).thenReturn(mockRefreshToken);
         when(jwtService.createRefreshTokenCookie(mockRefreshToken)).thenReturn(mockRefreshCookie);
 
+        //execute
         TokenDTO result = authService.authenticate(request);
 
-        assertNotNull(result.getAccessToken());  // Token was set
-        assertNotNull(result.getRefreshCookie()); // Cookie was set
+        //verify
+        assertNotNull(result.getAccessToken());  
+        assertNotNull(result.getRefreshCookie()); 
 
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(jwtService).generateToken(mockUser);
@@ -128,32 +126,38 @@ class AuthServiceTest {
 
     @Test
     void shouldThrowBadCredentialsExceptionWhenAuthenticationFails(){
+        //when
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenThrow(BadCredentialsException.class);
         
+        //execute
         assertThrows(BadCredentialsException.class, () -> {
             authService.authenticate(request);
         });
+
+        //verify
+        verify(jwtService, never()).generateToken(any());
+        verify(jwtService, never()).generateRefreshToken(any());
+        verify(tokenRepository, never()).save(any(Token.class));
     }
 
     @Test
     void shouldRefreshTokenSuccessfully() {
         try (MockedStatic<SecurityContextHolder> mockedStatic = mockStatic(SecurityContextHolder.class)) {
+            //when
             SecurityContext securityContext = mock(SecurityContext.class);
             
-            // Mock the static calls
             mockedStatic.when(SecurityContextHolder::getContext).thenReturn(securityContext);
             when(securityContext.getAuthentication()).thenReturn(authentication);
             when(authentication.getPrincipal()).thenReturn(mockUser);
             
-            // Mock repository and service calls
             when(repository.findUserByEmail(mockUser.getEmail())).thenReturn(Optional.of(mockUser));
             when(jwtService.generateToken(mockUser)).thenReturn(mockJwtToken);
 
-            // Execute
+            //execute
             AuthResponse result = authService.refreshToken();
 
-            // Verify
+            //verify
             assertNotNull(result.getAccessToken());
             System.out.println("Access Token: " + result.getAccessToken()); 
 
@@ -165,18 +169,20 @@ class AuthServiceTest {
     @Test
     void shouldThrowExceptionWhenUserNotFoundDuringRefresh() {
         try (MockedStatic<SecurityContextHolder> mockedStatic = mockStatic(SecurityContextHolder.class)) {
+            //when
             SecurityContext securityContext = mock(SecurityContext.class);
             
-            // Mock the static calls
             mockedStatic.when(SecurityContextHolder::getContext).thenReturn(securityContext);
             when(securityContext.getAuthentication()).thenReturn(authentication);
             when(authentication.getPrincipal()).thenReturn(null);
 
+            //execute
             IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
                 authService.refreshToken();
             });
 
-             System.out.println("Exception message: " + exception.getMessage());
+            //verify
+            System.out.println("Exception message: " + exception.getMessage());
             
             verify(repository).findUserByEmail(null);
         }
@@ -184,6 +190,7 @@ class AuthServiceTest {
 
     @Test
     void shouldRevokeAllUserTokensWhenTokensExist() {
+        //when
         when(tokenRepository.findAllValidTokenByUser(mockUser.getUid())).thenReturn(existingTokens);
 
         //for when calling .authenticate
@@ -191,10 +198,10 @@ class AuthServiceTest {
             .thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(mockUser);
         
-        // When
+        //execute
         authService.authenticate(request); // This calls revokeAllUserTokens internally
         
-        // Then
+        //verify
         verify(tokenRepository).findAllValidTokenByUser(mockUser.getUid());
         verify(tokenRepository).saveAll(argThat(tokens -> {
             List<Token> tokenList = (List<Token>) tokens;
@@ -206,7 +213,7 @@ class AuthServiceTest {
 
     @Test
     void shouldNotCallSaveAllWhenNoValidTokensExist() {
-        // Given
+        //when
         when(tokenRepository.findAllValidTokenByUser(mockUser.getUid())).thenReturn(List.of());
 
         //for when calling .authenticate
@@ -214,16 +221,11 @@ class AuthServiceTest {
             .thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(mockUser);
         
-        // When
+        //execute
         authService.authenticate(request);
         
-        // Then
+        //verify
         verify(tokenRepository).findAllValidTokenByUser(mockUser.getUid());
         verify(tokenRepository, never()).saveAll(any());
     }
-
-
-
-
-
 }

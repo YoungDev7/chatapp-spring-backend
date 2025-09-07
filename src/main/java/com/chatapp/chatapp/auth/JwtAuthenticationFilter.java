@@ -11,6 +11,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.chatapp.chatapp.DTO.JwtValidationResult;
 import com.chatapp.chatapp.repository.TokenRepository;
 import com.chatapp.chatapp.service.JwtService;
 import com.chatapp.chatapp.util.ApplicationLogger;
@@ -36,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     throws ServletException, IOException {
         
       //TODO: refactor ? authentication is based on if both tokens are present or not, shouldnt it be determined by target API endpoint?
-
+    
       // Skip authentication for certain endpoints
       if (request.getServletPath().contains("/api/v1/auth/authenticate") || request.getServletPath().contains("/ws") || request.getServletPath().contains("/api/v1/auth/register")) {
         ApplicationLogger.requestLogFilter(request, "skipping authentication");
@@ -91,14 +92,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         JwtValidationResult validationResult = jwtService.validateToken(jwt);
         
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            
+            //TODO: this block needs refactor: it should say that user has not been found in the database...
             try{
               //database check TODO: remove
               userDetails = this.userDetailsService.loadUserByUsername(validationResult.getUsername());
             } catch (UsernameNotFoundException e){
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-              response.getWriter().write("User not found");
-              ApplicationLogger.requestLogFilter(request, "invlaid token user not found", HttpServletResponse.SC_UNAUTHORIZED, authHeader, validationResult.getUsername(), validationResult.getStatus().toString(), e.getMessage());
+              response.getWriter().write("Invalid token " + validationResult.getStatus());
+              ApplicationLogger.requestLogFilter(request, "Invalid access token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, validationResult.getUsername(), validationResult.getStatus().toString(), e.getMessage());
               return;
             }
           
@@ -140,7 +141,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         }
 
         //ACCESS TOKEN
-        //TODO: validating access token is duplicate code from above and logoutService, should be refactored
+        //TODO: validating access token is duplicate code from above and logoutService, should be refactored, the whole access token thing should be refactored
         final String jwt = authHeader.substring(7);
         UserDetails userDetails;
         JwtValidationResult validationResultAccess = jwtService.validateToken(jwt);
@@ -152,8 +153,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
               userDetails = this.userDetailsService.loadUserByUsername(validationResultAccess.getUsername());
             } catch (UsernameNotFoundException e){
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-              response.getWriter().write("user not found");
-              ApplicationLogger.requestLogFilter(request, "invalid access token user not found", HttpServletResponse.SC_UNAUTHORIZED, authHeader, refreshToken, validationResultAccess.getUsername(), validationResultAccess.getStatus().toString(), e.getMessage());
+              response.getWriter().write("Invalid token " + validationResultAccess.getStatus());
+              ApplicationLogger.requestLogFilter(request, "Invalid access token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, validationResultAccess.getUsername(), validationResultAccess.getStatus().toString(), e.getMessage());
               return;
             }
 

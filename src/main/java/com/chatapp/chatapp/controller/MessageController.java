@@ -8,11 +8,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,7 +29,15 @@ public class MessageController {
         this.messageService = messageService;
     }
 
-    // Secured WebSocket endpoint
+    /**
+     * Handles incoming WebSocket messages from authenticated users.
+     * Validates that the sender matches the authenticated user before processing.
+     * 
+     * @param messageRequest The message request containing text and sender UID
+     * @param principal The authenticated user principal from the WebSocket session
+     * @return Message object that gets broadcasted to all subscribers via /topic/messages,
+     *         or null if authentication fails or user mismatch occurs
+     */
     @MessageMapping("/chat") // where client broadcasts
     @SendTo("/topic/messages") // where server broadcasts
     public Message handleMessage(@Payload MessageRequest messageRequest, Principal principal) {
@@ -59,19 +63,14 @@ public class MessageController {
         return null;
     }
     
+    /**
+     * Retrieves all messages from the system.
+     * 
+     * @return List of all Message objects in the system
+     */
     @GetMapping
     public List<Message> AllMessages(){
         return messageService.getMessages();
-    }
-
-    @PostMapping
-    public void postMessage(@RequestBody Message message){
-        messageService.postNewMessage(message);
-    }
-
-    @DeleteMapping(path = "{id}")
-    public void deleteMessage(@PathVariable("id") Long id){
-        messageService.deleteMessage(id);
     }
 
 }

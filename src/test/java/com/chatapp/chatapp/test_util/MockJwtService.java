@@ -16,9 +16,22 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
-//this service is needed to due to some methods in JwtService being private
-//also it helps to have methods that generate specific tokens for testing purposes
-
+/**
+ * Mock JWT service utility for testing purposes.
+ * 
+ * This service provides controlled JWT token generation and manipulation capabilities
+ * needed for comprehensive testing of JWT-related functionality. It exists because
+ * some methods in the main JwtService are private and cannot be directly accessed
+ * in tests. Additionally, it provides specialized methods to generate various types
+ * of tokens (valid, expired, malformed, etc.) to test different authentication
+ * scenarios and edge cases.
+ * 
+ * Only active in the "test" profile to ensure it's not accidentally used in production.
+ * 
+ * WARNING
+ * This file needs to be in sync wdith JwtService.java, all changes in JwtService.java need
+ * to be reflected in this file also
+ */
 @Profile("test")
 public final class MockJwtService {
     //cannot read from @Value annotations in tests so we have to hardcode the values

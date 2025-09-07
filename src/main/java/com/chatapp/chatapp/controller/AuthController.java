@@ -30,6 +30,15 @@ public class AuthController {
     
     private final AuthService service;
 
+    /**
+     * Authenticates a user with email and password credentials.
+     * 
+     * @param request The authentication request containing email and password
+     * @param httpServletRequest The HTTP servlet request for logging purposes
+     * @param httpServletResponse The HTTP servlet response to set refresh token cookie
+     * @return ResponseEntity containing the access token on success (200), 
+     *         or error message on authentication failure (401)
+     */
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticate(@RequestBody AuthRequest request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         try{
@@ -53,6 +62,17 @@ public class AuthController {
         }
     }
 
+    /**
+     * Registers a new user account.
+     * 
+     * @param request The registration request containing user details (email, username, password)
+     * @param httpServletRequest The HTTP servlet request for logging purposes
+     * @param httpServletResponse The HTTP servlet response (unused but kept for consistency)
+     * @return ResponseEntity with success message (201) on successful registration,
+     *         conflict error (409) if user already exists,
+     *         bad request (400) for invalid input format,
+     *         or forbidden (403) for other registration failures
+     */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
         try{
@@ -77,6 +97,15 @@ public class AuthController {
         }
     }
 
+    /**
+     * Refreshes an expired access token using a valid refresh token.
+     * The refresh token is expected to be provided via HTTP-only cookie.
+     * 
+     * @param httpServletRequest The HTTP servlet request for logging purposes
+     * @param httpServletResponse The HTTP servlet response (unused but kept for consistency)
+     * @return ResponseEntity containing a new access token (200) on success,
+     *         or unauthorized error (401) if refresh token is invalid or user not found
+     */
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
         try{
@@ -95,6 +124,14 @@ public class AuthController {
         }
     }
 
+    /**
+     * Validates the current access token.
+     * This endpoint can be used to check if a user's token is still valid.
+     * 
+     * @param httpServletRequest The HTTP servlet request for logging purposes
+     * @return ResponseEntity with "valid" message (200) if token is valid.
+     *         Invalid tokens will be handled by security filters before reaching this method.
+     */
     @GetMapping("/validateToken")
     public ResponseEntity<?> validateToken(HttpServletRequest httpServletRequest){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

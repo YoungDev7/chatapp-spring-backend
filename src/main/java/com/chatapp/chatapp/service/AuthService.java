@@ -33,6 +33,13 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
 
+    /**
+     * Authenticates a user with the provided credentials and generates JWT tokens.
+     * 
+     * @param request the authentication request containing email and password
+     * @return TokenDTO containing the access token and refresh token cookie
+     * @throws BadCredentialsException if the provided credentials are invalid
+     */
     public TokenDTO authenticate(AuthRequest request) throws BadCredentialsException {
         try{
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
@@ -50,6 +57,13 @@ public class AuthService {
         }
     }
 
+    /**
+     * Registers a new user with the provided information after validating the data.
+     * 
+     * @param request the registration request containing username, password, and email
+     * @throws IllegalArgumentException if the email already exists, username already exists,
+     *                                  email format is invalid, or username/password is blank
+     */
     public void register(RegisterRequest request) throws IllegalArgumentException{
         Optional<User> userOptionalEmail = repository.findUserByEmail(request.getEmail());
         Optional<User> userOptionalUsername = repository.findUserByName(request.getUsername());
@@ -77,6 +91,12 @@ public class AuthService {
         }
     }
 
+    /**
+     * Refreshes the access token for the currently authenticated user.
+     * 
+     * @return AuthResponse containing the new access token
+     * @throws IllegalStateException if the authenticated user cannot be found in the database
+     */
     public AuthResponse refreshToken() throws IllegalStateException{
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal() instanceof User ? ((User) authentication.getPrincipal()).getEmail() : null;

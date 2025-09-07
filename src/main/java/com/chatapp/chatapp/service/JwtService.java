@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
-import com.chatapp.chatapp.auth.JwtValidationResult;
+import com.chatapp.chatapp.DTO.JwtValidationResult;
 import com.chatapp.chatapp.entity.User;
 
 import io.jsonwebtoken.Claims;
@@ -18,7 +18,11 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
-
+/**
+ * ATTENTION
+ * when refactoring or updating this class make sure that changes are reflexted 
+ * in MockJwtService.java, both files need to be in sync for accurate testing pourposes
+ */ 
 @Service
 public class JwtService {
 
@@ -54,6 +58,15 @@ public class JwtService {
     return buildToken(new HashMap<>(), user, refreshExpiration);
   }
 
+  /**
+   * Validates a JWT token and returns detailed validation results.
+   * 
+   * @param token the JWT token string to validate
+   * @return JwtValidationResult containing validation status, expiration info, username, and status details
+   *         - If valid: returns result with valid=true, expired=false, username extracted from token
+   *         - If expired: returns result with valid=false, expired=true, username from expired claims
+   *         - If invalid: returns result with valid=false, expired=false, username=null, and specific error status
+   */
   public JwtValidationResult validateToken(String token) {
     try {
         Claims claims = extractAllClaims(token);

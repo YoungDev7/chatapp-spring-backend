@@ -1,9 +1,18 @@
-package com.chatapp.chatapp.auth;
+package com.chatapp.chatapp.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+/**
+ * Data transfer object that encapsulates the result of JWT token validation.
+ * 
+ * This class provides detailed information about the validation status of a JWT token,
+ * including whether it's valid, expired, the extracted username, and specific validation
+ * status details. It's used by the JwtService to return comprehensive validation results
+ * that can be used for authentication decisions and error handling.
+ */
 
 @Data
 @Builder

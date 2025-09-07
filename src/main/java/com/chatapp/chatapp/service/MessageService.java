@@ -32,7 +32,15 @@ public class MessageService {
         return messageRepository.findAll();
     }
 
-    //post new message to database after checking if user is valid 
+    /**
+     * Posts a new message to the database after validating that the sender exists.
+     * 
+     * This method verifies that the message sender is a valid user in the database
+     * before saving the message. WebSocket broadcasting is handled separately in the controller.
+     * 
+     * @param message the message to be saved, must contain a valid sender with UID
+     * @throws IllegalStateException if the sender user is not found in the database
+     */
     public void postNewMessage(Message message){
         Optional<User> userOptional = userRepository.findUserByUid(message.getSender().getUid());
 
