@@ -33,6 +33,7 @@ public class Config {
             // userRepository.save(testUser);
             // userRepository.save(testUser2);
             
+            
             // User testUser = userRepository.findUserByEmail("gabeitch@example.com").orElseThrow(() -> new IllegalStateException("user not found:"));
             // Message testMessage = new Message("test", testUser);
             // messageRepository.save(testMessage);

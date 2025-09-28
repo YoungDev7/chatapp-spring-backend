@@ -1,0 +1,102 @@
+# parent-directory/
+# ├── chatapp-spring-backend/     (current repo with compose.yaml)
+# │   └── docker-compose.dev.yml
+# └── chatapp-react-frontend/     (cloned separately)
+
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: always
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: DEBUG
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: 2s
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: 1s
+      DB_PORT: ${DB_PORT}
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: chatapp
+      APPLICATION_SECURITY_JWT_SECRETKEY: ${JWT_SECRET_KEY}
+      APPLICATION_SECURITY_JWT_EXPIRATION: ${JWT_EXPIRATION}
+      APPLICATION_SECURITY_JWT_REFRESHTOKEN_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
+    networks:
+      - react-spring
+      - spring-mysql
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT}:8080"
+    volumes:
+      # Hot reload mounts - more comprehensive
+      - ./src:/app/src          
+      - ./pom.xml:/app/pom.xml
+      # Add these for better file watching
+      - ./target/classes:/app/target/classes
+      # Maven cache volume to persist dependencies
+      - maven-cache:/root/.m2
+      # Exclude target from volume mount to prevent conflicts
+      - /app/target
+
+  db:
+    image: mysql:8.0
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: chatapp
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - spring-mysql
+    ports:
+      - "${DB_PORT}:3306"
+
+  frontend:
+    build:
+      context: ../chatapp-react-frontend
+      dockerfile: Dockerfile.dev
+    networks:
+      - react-spring
+    depends_on:
+      - backend
+    env_file:
+      - ../chatapp-react-frontend/.env
+    environment:
+      - NODE_ENV=development
+      - FRONTEND_PORT=5173
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+      - VITE_WS_BASE_URL=${VITE_WS_BASE_URL}
+    ports:
+      - "5173:5173"
+    volumes:
+      # Simplified volume mounts for frontend
+      - ../chatapp-react-frontend/src:/usr/src/app/src
+      - ../chatapp-react-frontend/public:/usr/src/app/public
+      - ../chatapp-react-frontend/package.json:/usr/src/app/package.json
+      - ../chatapp-react-frontend/vite.config.js:/usr/src/app/vite.config.js
+      - ../chatapp-react-frontend/index.html:/usr/src/app/index.html
+      # Keep node_modules in container
+      - /usr/src/app/node_modules
+
+volumes:
+  db-data: {}
+  maven-cache: {}  # Add this line
+
+networks:
+  react-spring: {}
+  spring-mysql: {}

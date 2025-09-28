@@ -1,3 +1,3 @@
 INSERT INTO user (uid, email, name, password) VALUES 
-('584658ca-f4ae-4cba-a59a-2c30162e23fd', 'gabeitch@example.com', 'Gabe Itch', '$2a$10$MkiQd205Z6CYpRlNS2PKEeamsZTb/d9Jik.6IQZQkyPsPvgU37miW'),
-('b4eac44c-3600-4fcd-b062-cc5ce816d11b', 'mikehock@email.com', 'mike hock', '$2a$10$7ag0i20h8aG2vHyqREOg4.kTsv3Y39D3qea8dPZtlRiTD3D9yF1y6');
+('68e16967-fa4e-4e64-8128-57ebbdf5d87d', 'test1@email.com', 'Test User One', '$2a$10$5yQPpvReaRhAP7yKKoW2Ke5XbxiSIMO7nvWLGPILLj8HIcTVQxbDi'),
+('b72371cf-a2bf-468c-92ac-3cfb4f62bdbc', 'test2@email.com', 'Test User Two', '$2a$10$BOlnf4wRR8dSt5h5vQ.E3O88mdVwupA4jmDh4rAD45.FIL30EcbeS');

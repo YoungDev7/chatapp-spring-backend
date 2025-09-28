@@ -1,0 +1,6 @@
+# Development profile
+spring.datasource.username=
+spring.datasource.password=
+application.security.jwt.secret-key=
+application.security.jwt.expiration=
+application.security.jwt.refresh-token.expiration=

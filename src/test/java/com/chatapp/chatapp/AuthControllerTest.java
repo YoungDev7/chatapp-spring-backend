@@ -58,23 +58,27 @@ public class AuthControllerTest {
     private String InvalidRequestBody;
     private String url;
     private MockJwtService mockJwtService;
+    private String userOneEmail;
+    private String userTwoEmail;
 
     // all tests indirectly test JwtAuthenticationFilter
 
     @BeforeEach
     void setUp() {
         mockJwtService = new MockJwtService();
+        userOneEmail = "test1@email.com";
+        userTwoEmail = "test2@email.com";
 
         ValidRequestBody = """
             {
-                "email": "mikehock@email.com",
-                "password": "cunt"
+                "email": "test1@email.com",
+                "password": "testuserone"
             }
             """;
 
         InvalidRequestBody = """
         {
-            "email": "mikehock@email.com",
+            "email": "test1@email.com",
             "password": "wrongpassword"
         }
         """;
@@ -129,7 +133,7 @@ public class AuthControllerTest {
     void shouldHandleDifferentTokenTypes(Function<User, String> tokenGenerator, HttpStatus expectedStatus, String expectedMessage) {
         //setup
         String url = "http://localhost:" + port + "/api/v1/auth/validateToken";
-        User user = userRepository.findUserByEmail("gabeitch@example.com").orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userRepository.findUserByEmail(userOneEmail).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         
         String token = tokenGenerator.apply(user);
 
@@ -178,7 +182,7 @@ public class AuthControllerTest {
 
         //we are setting up users refresh token in the database for each transaction
         try {
-            User user = userRepository.findUserByEmail("gabeitch@example.com").orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            User user = userRepository.findUserByEmail(userOneEmail).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
             //generates tokens 
             accessToken = accessTokenGenerator.apply(user);
