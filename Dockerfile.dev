@@ -22,4 +22,4 @@ COPY . .
 EXPOSE 8080
 
 # Run in development mode with DevTools
-CMD ["./mvnw", "spring-boot:run", "-Dspring-boot.run.jvmArguments=-Dspring.profiles.active=dev -Dspring.devtools.restart.enabled=true"]
+CMD ["./mvnw", "spring-boot:run", "-Dspring.devtools.restart.enabled=true"]
