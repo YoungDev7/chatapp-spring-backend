@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 
 import com.chatapp.chatapp.entity.Message;
 import com.chatapp.chatapp.entity.User;
-import com.chatapp.chatapp.repository.IMessageRepository;
-import com.chatapp.chatapp.repository.IUserRepository;
+import com.chatapp.chatapp.repository.MessageRepository;
+import com.chatapp.chatapp.repository.UserRepository;
 
 
 @Service
@@ -18,11 +18,11 @@ public class MessageService {
     
     @Autowired
     //private SimpMessagingTemplate messagingTemplate;
-    private final IMessageRepository messageRepository;
-    private final IUserRepository userRepository;
+    private final MessageRepository messageRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public MessageService(IMessageRepository messageRepository, IUserRepository userRepository) {
+    public MessageService(MessageRepository messageRepository, UserRepository userRepository) {
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
     }

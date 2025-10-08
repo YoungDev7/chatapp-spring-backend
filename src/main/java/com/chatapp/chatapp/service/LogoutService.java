@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 
 import com.chatapp.chatapp.DTO.JwtValidationResult;
 import com.chatapp.chatapp.entity.User;
-import com.chatapp.chatapp.repository.IUserRepository;
 import com.chatapp.chatapp.repository.TokenRepository;
+import com.chatapp.chatapp.repository.UserRepository;
 import com.chatapp.chatapp.util.ApplicationLogger;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class LogoutService implements LogoutHandler{
     
     private final TokenRepository tokenRepository;
-    private final IUserRepository userRepository;
+    private final UserRepository userRepository;
     private final JwtService jwtService;
 
     /**

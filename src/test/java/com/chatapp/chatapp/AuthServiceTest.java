@@ -34,8 +34,8 @@ import com.chatapp.chatapp.DTO.AuthResponse;
 import com.chatapp.chatapp.DTO.TokenDTO;
 import com.chatapp.chatapp.entity.Token;
 import com.chatapp.chatapp.entity.User;
-import com.chatapp.chatapp.repository.IUserRepository;
 import com.chatapp.chatapp.repository.TokenRepository;
+import com.chatapp.chatapp.repository.UserRepository;
 import com.chatapp.chatapp.service.AuthService;
 import com.chatapp.chatapp.service.JwtService;
 
@@ -43,7 +43,7 @@ import com.chatapp.chatapp.service.JwtService;
 class AuthServiceTest {
 
     @Mock
-    private IUserRepository repository;
+    private UserRepository repository;
     
     @Mock
     private TokenRepository tokenRepository;

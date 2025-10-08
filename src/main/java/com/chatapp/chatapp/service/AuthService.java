@@ -17,8 +17,8 @@ import com.chatapp.chatapp.DTO.RegisterRequest;
 import com.chatapp.chatapp.DTO.TokenDTO;
 import com.chatapp.chatapp.entity.Token;
 import com.chatapp.chatapp.entity.User;
-import com.chatapp.chatapp.repository.IUserRepository;
 import com.chatapp.chatapp.repository.TokenRepository;
+import com.chatapp.chatapp.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthService {
     
-    private final IUserRepository repository;
+    private final UserRepository repository;
     private final TokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 import com.chatapp.chatapp.entity.User;
 
 @Repository
-public interface IUserRepository extends JpaRepository<User, String>{
+public interface UserRepository extends JpaRepository<User, String>{
     @NonNull
     List<User> findAll();
 

@@ -2,6 +2,7 @@ package com.chatapp.chatapp.config;
 
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,8 +14,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.chatapp.chatapp.repository.IMessageRepository;
-import com.chatapp.chatapp.repository.IUserRepository;
+import com.chatapp.chatapp.repository.MessageRepository;
+import com.chatapp.chatapp.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,11 +23,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class Config {
 
-    private final IUserRepository userRepository;
-    private final IMessageRepository messageRepository;
+    private final UserRepository userRepository;
+    private final MessageRepository messageRepository;
 
     @Bean
-    CommandLineRunner commandLineRunner(IMessageRepository messageRepository, IUserRepository userRepository){
+    CommandLineRunner commandLineRunner(MessageRepository messageRepository, UserRepository userRepository, ApplicationContext ctx){
         return args ->{
             // User testUser = new User("Test User One", this.passwordEncoder().encode("testuserone"), "test1@email.com");
             // User testUser2 = new User("Test User Two", this.passwordEncoder().encode("testusertwo"), "test2@email.com");
@@ -37,6 +38,7 @@ public class Config {
             // User testUser = userRepository.findUserByEmail("gabeitch@example.com").orElseThrow(() -> new IllegalStateException("user not found:"));
             // Message testMessage = new Message("test", testUser);
             // messageRepository.save(testMessage);
+            
         };
     }
 

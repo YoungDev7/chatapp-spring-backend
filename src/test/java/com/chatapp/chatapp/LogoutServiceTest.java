@@ -7,13 +7,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
 import com.chatapp.chatapp.entity.User;
-import com.chatapp.chatapp.repository.IUserRepository;
 import com.chatapp.chatapp.repository.TokenRepository;
+import com.chatapp.chatapp.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class LogoutServiceTest {
     @Mock
-    private IUserRepository userRepository;
+    private UserRepository userRepository;
 
     @Mock
     private TokenRepository tokenRepository;

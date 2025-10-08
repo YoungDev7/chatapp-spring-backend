@@ -1,14 +1,14 @@
 package com.chatapp.chatapp.repository;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
 import com.chatapp.chatapp.entity.Message;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.lang.NonNull;
-import java.util.List;
-
 @Repository
-public interface IMessageRepository extends JpaRepository<Message, Long> {
+public interface MessageRepository extends JpaRepository<Message, Long> {
     @NonNull
     List<Message> findAll();
 }

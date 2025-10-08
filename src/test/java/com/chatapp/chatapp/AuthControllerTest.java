@@ -29,8 +29,8 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import com.chatapp.chatapp.entity.Token;
 import com.chatapp.chatapp.entity.User;
-import com.chatapp.chatapp.repository.IUserRepository;
 import com.chatapp.chatapp.repository.TokenRepository;
+import com.chatapp.chatapp.repository.UserRepository;
 import com.chatapp.chatapp.test_util.MockJwtService;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -44,7 +44,7 @@ public class AuthControllerTest {
     private TestRestTemplate restTemplate;
 
     @Autowired
-    private IUserRepository userRepository;
+    private UserRepository userRepository;
 
 
     @Autowired
