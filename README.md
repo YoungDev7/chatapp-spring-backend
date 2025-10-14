@@ -154,10 +154,36 @@ Configuration Files:
    
    # API URLs
    VITE_API_BASE_URL=http://localhost:8080/api/v1
-   VITE_WS_BASE_URL=ws://localhost:8080/ws
+   VITE_WS_BASE_URL=http://localhost:8080/ws
+   ```
+   
+   **Configure `application-dev.properties`**:
+   
+   Edit `src/main/resources/application-dev.properties` with your local settings:
+   ```properties
+   # Development profile
+   spring.datasource.username=chatapp_user
+   spring.datasource.password=your_password
+   application.security.jwt.secret-key=your-256-bit-secret-key
+   application.security.jwt.expiration=3600000
+   application.security.jwt.refresh-token.expiration=604800000
+   ```
+   
+   **Note**: Generate a secure JWT secret key using:
+   ```bash
+   openssl rand -base64 32
    ```
 
-4. **Build and Run (Local)**
+4. **Build the Application**
+   ```bash
+   # Clean and install dependencies
+   ./mvnw clean install
+   
+   # Or using Maven
+   mvn clean install
+   ```
+
+5. **Build and Run (Local)**
    ```bash
    # Using Maven wrapper
    ./mvnw spring-boot:run
