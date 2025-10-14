@@ -2,6 +2,8 @@
 
 A RESTful API backend for a real-time chat application built with Spring Boot. Features JWT authentication, WebSocket messaging, MySQL database integration, and comprehensive security configurations.
 
+![Application Architecture](documentation/architecture_diagram.png)
+
 ## 🚀 Technologies Used
 
 - **Spring Boot 3.3.1** - Application framework
@@ -422,27 +424,31 @@ LOGGING_LEVEL_COM_CHATAPP_CHATAPP=DEBUG
 
 ## 📚 Documentation
 
-Additional documentation available in [`/documentation`](documentation/):
-- Architecture diagrams
-- Sequence diagrams  
-- Database schema diagrams
-- API flow diagrams
+### System Architecture & Diagrams
 
-## 🏗️ Architecture Overview
+#### Authentication Flow
+![Authentication Sequence](documentation/login_seq_chatapp.png)
+*Step-by-step authentication process from login to token generation*
 
-![Application Architecture](documentation/diagrams/architecture.png)
+#### Class Diagram
+![Class Diagram](documentation/class_diagram_chatapp.png)
+*Entity relationship and class structure showing the domain model*
 
-## 🔐 Authentication Flow
+#### JWT Authentication Flow
+![JWT Authentication](documentation/authentication_seq_chatapp.png)
+*Detailed JWT token validation and authentication filter chain*
 
-![Authentication Sequence](documentation/diagrams/auth-sequence.png)
+#### Message Flow
+![Message Flow Sequence](documentation/send_message_seq_chatapp.png)
+*Real-time messaging flow through WebSocket connections*
 
-## 💬 Message Flow
+#### Token Refresh Flow
+![Token Refresh Sequence](documentation/refresh_seq_chatapp.png)
+*Token refresh mechanism and authentication flow*
 
-![Message Flow Sequence](documentation/diagrams/message-flow-sequence.png)
-
-## 📊 Database Schema
-
-![Database Schema](documentation/diagrams/database-schema.png)
+#### Use Case Diagram
+![Use Case Diagram](documentation/chatapp_usecase.png)
+*User interactions and system capabilities overview*
 
 ## 🔗 Related Projects
 
