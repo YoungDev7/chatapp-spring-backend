@@ -452,7 +452,7 @@ LOGGING_LEVEL_COM_CHATAPP_CHATAPP=DEBUG
 
 ## 🔗 Related Projects
 
-- [Frontend Repository](../chatapp-react-frontend) - React frontend application
+- [Frontend Repository](https://github.com/YoungDev7/chatapp-react-frontend) - React frontend application
 
 ## 📄 License
 
