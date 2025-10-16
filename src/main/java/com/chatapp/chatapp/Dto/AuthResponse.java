@@ -1,4 +1,4 @@
-package com.chatapp.chatapp.DTO;
+package com.chatapp.chatapp.Dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

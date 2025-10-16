@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.chatapp.chatapp.DTO.MessageRequest;
-import com.chatapp.chatapp.DTO.MessageResponse;
+import com.chatapp.chatapp.Dto.MessageRequest;
+import com.chatapp.chatapp.Dto.MessageResponse;
 import com.chatapp.chatapp.entity.Message;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.service.MessageService;

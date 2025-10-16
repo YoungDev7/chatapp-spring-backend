@@ -1,4 +1,4 @@
-package com.chatapp.chatapp.DTO;
+package com.chatapp.chatapp.Dto;
 
 import org.springframework.http.ResponseCookie;
 
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TokenDTO {
+public class TokenInfo {
     private String accessToken;
     private ResponseCookie refreshCookie;
 }

@@ -29,9 +29,9 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.chatapp.chatapp.DTO.AuthRequest;
-import com.chatapp.chatapp.DTO.AuthResponse;
-import com.chatapp.chatapp.DTO.TokenDTO;
+import com.chatapp.chatapp.Dto.AuthRequest;
+import com.chatapp.chatapp.Dto.AuthResponse;
+import com.chatapp.chatapp.Dto.TokenInfo;
 import com.chatapp.chatapp.entity.Token;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.TokenRepository;
@@ -106,7 +106,7 @@ class AuthServiceTest {
         when(jwtService.createRefreshTokenCookie(mockRefreshToken)).thenReturn(mockRefreshCookie);
 
         //execute
-        TokenDTO result = authService.authenticate(request);
+        TokenInfo result = authService.authenticate(request);
 
         //verify
         assertNotNull(result.getAccessToken());  

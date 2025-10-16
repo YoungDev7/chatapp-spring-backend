@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.chatapp.chatapp.DTO.AuthRequest;
-import com.chatapp.chatapp.DTO.AuthResponse;
-import com.chatapp.chatapp.DTO.RegisterRequest;
-import com.chatapp.chatapp.DTO.TokenDTO;
+import com.chatapp.chatapp.Dto.AuthRequest;
+import com.chatapp.chatapp.Dto.AuthResponse;
+import com.chatapp.chatapp.Dto.RegisterRequest;
+import com.chatapp.chatapp.Dto.TokenInfo;
 import com.chatapp.chatapp.service.AuthService;
 import com.chatapp.chatapp.util.ApplicationLogger;
 
@@ -42,7 +42,7 @@ public class AuthController {
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticate(@RequestBody AuthRequest request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         try{
-            TokenDTO tokens = authService.authenticate(request);
+            TokenInfo tokens = authService.authenticate(request);
             
             httpServletResponse.addHeader(HttpHeaders.SET_COOKIE, tokens.getRefreshCookie().toString());
             

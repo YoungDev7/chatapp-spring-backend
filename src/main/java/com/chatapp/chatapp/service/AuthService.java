@@ -11,10 +11,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.chatapp.chatapp.DTO.AuthRequest;
-import com.chatapp.chatapp.DTO.AuthResponse;
-import com.chatapp.chatapp.DTO.RegisterRequest;
-import com.chatapp.chatapp.DTO.TokenDTO;
+import com.chatapp.chatapp.Dto.AuthRequest;
+import com.chatapp.chatapp.Dto.AuthResponse;
+import com.chatapp.chatapp.Dto.RegisterRequest;
+import com.chatapp.chatapp.Dto.TokenInfo;
 import com.chatapp.chatapp.entity.Token;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.TokenRepository;
@@ -37,10 +37,10 @@ public class AuthService {
      * Authenticates a user with the provided credentials and generates JWT tokens.
      * 
      * @param request the authentication request containing email and password
-     * @return TokenDTO containing the access token and refresh token cookie
+     * @return TokenInfo containing the access token and refresh token cookie
      * @throws BadCredentialsException if the provided credentials are invalid
     */
-    public TokenDTO authenticate(AuthRequest request) throws BadCredentialsException {
+    public TokenInfo authenticate(AuthRequest request) throws BadCredentialsException {
         try{
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
             var user = (User) authentication.getPrincipal();
@@ -50,7 +50,7 @@ public class AuthService {
             saveUserToken(user, refreshToken);
             var refreshCookie = jwtService.createRefreshTokenCookie(refreshToken);
 
-            return new TokenDTO(jwtToken, refreshCookie);
+            return new TokenInfo(jwtToken, refreshCookie);
             
         }catch(BadCredentialsException e){
             throw e;

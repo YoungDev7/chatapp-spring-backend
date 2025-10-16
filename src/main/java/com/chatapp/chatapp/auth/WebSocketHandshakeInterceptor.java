@@ -1,6 +1,5 @@
 package com.chatapp.chatapp.auth;
 
-import java.net.URI;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -28,23 +27,21 @@ public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                   WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
 
-        //logger.debug("beforeHandshake: {}", request);
-
         if (request instanceof ServletServerHttpRequest) {
-            URI uri = request.getURI();
-            String query = uri.getQuery();
             HttpServletRequest servletRequest = ((ServletServerHttpRequest) request).getServletRequest();
+            
+            // Get specific parameter
+            String token = servletRequest.getParameter("token");
 
-            // Extract token parameter from query string
-            if (query != null && query.contains("token=Bearer ")) {
-                String token = extractTokenFromQuery(query);
-                attributes.put("token", token);
+            if (token != null && token.startsWith("Bearer ")) {
+                String actualToken = token.substring(7);
+                attributes.put("token", actualToken);
 
-                ApplicationLogger.websocketConnectionLog(servletRequest, "WebSocket Handshake successful", 101, query);                
+                ApplicationLogger.websocketConnectionLog(servletRequest, "WebSocket Handshake successful", 101, servletRequest.getQueryString());                
                 return true;
-            }else {
+            } else {
                 attributes.put("token", null);
-                ApplicationLogger.websocketConnectionLog(servletRequest, "WebSocket Handshake failed: missing token or authentication header", 401, query);
+                ApplicationLogger.websocketConnectionLog(servletRequest, "WebSocket Handshake failed: missing token or authentication header", 401, servletRequest.getQueryString());
             }    
         }
         //incase failure accured due to request not being instance of ServletServerHttpRequest
@@ -60,21 +57,5 @@ public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
                               WebSocketHandler wsHandler, Exception exception) {
         // Nothing to do here
-    }
-    
-    private String extractTokenFromQuery(String query) {
-        int tokenIndex = query.indexOf("token=Bearer ");
-        if (tokenIndex == -1) return null;
-        
-        // Get substring after "token=Bearer "
-        String tokenSubstring = query.substring(tokenIndex + 13);
-        
-        // Find the end of the token (either & or end of string)
-        int endIndex = tokenSubstring.indexOf("&");
-        if (endIndex == -1) {
-            return tokenSubstring;
-        } else {
-            return tokenSubstring.substring(0, endIndex);
-        }
     }
 }

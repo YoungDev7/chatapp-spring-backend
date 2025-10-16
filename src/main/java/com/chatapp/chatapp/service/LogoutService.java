@@ -6,7 +6,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Service;
 
-import com.chatapp.chatapp.DTO.JwtValidationResult;
+import com.chatapp.chatapp.Dto.JwtValidationResult;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.TokenRepository;
 import com.chatapp.chatapp.repository.UserRepository;

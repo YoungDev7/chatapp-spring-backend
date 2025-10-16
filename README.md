@@ -50,7 +50,7 @@ src/main/java/com/chatapp/chatapp/
 │   ├── AuthResponse.java         # Login response DTO
 │   ├── RegisterRequest.java      # Registration request DTO
 │   ├── MessageRequest.java       # Message request DTO
-│   ├── TokenDTO.java            # Token transfer DTO
+│   ├── TokenInfo.java            # Token transfer DTO
 │   └── JwtValidationResult.java  # JWT validation result DTO
 ├── entity/
 │   ├── User.java                # User entity

@@ -16,7 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
-import com.chatapp.chatapp.DTO.JwtValidationResult;
+import com.chatapp.chatapp.Dto.JwtValidationResult;
 import com.chatapp.chatapp.service.JwtService;
 import com.chatapp.chatapp.util.ApplicationLogger;
 

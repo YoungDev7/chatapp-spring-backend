@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
-import com.chatapp.chatapp.DTO.JwtValidationResult;
+import com.chatapp.chatapp.Dto.JwtValidationResult;
 import com.chatapp.chatapp.entity.User;
 
 import io.jsonwebtoken.Claims;

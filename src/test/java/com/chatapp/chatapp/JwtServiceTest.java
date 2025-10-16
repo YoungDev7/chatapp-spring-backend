@@ -16,7 +16,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.chatapp.chatapp.DTO.JwtValidationResult;
+import com.chatapp.chatapp.Dto.JwtValidationResult;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.service.JwtService;
 import com.chatapp.chatapp.test_util.MockJwtService;

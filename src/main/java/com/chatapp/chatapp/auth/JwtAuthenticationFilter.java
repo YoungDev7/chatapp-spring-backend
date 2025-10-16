@@ -11,7 +11,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.chatapp.chatapp.DTO.JwtValidationResult;
+import com.chatapp.chatapp.Dto.JwtValidationResult;
 import com.chatapp.chatapp.repository.TokenRepository;
 import com.chatapp.chatapp.service.JwtService;
 import com.chatapp.chatapp.util.ApplicationLogger;
