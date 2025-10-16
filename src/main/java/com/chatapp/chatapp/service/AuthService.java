@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthService {
     
-    private final UserRepository repository;
+    private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -65,8 +65,8 @@ public class AuthService {
      *                                  email format is invalid, or username/password is blank
      */
     public void register(RegisterRequest request) throws IllegalArgumentException{
-        Optional<User> userOptionalEmail = repository.findUserByEmail(request.getEmail());
-        Optional<User> userOptionalUsername = repository.findUserByName(request.getUsername());
+        Optional<User> userOptionalEmail = userRepository.findUserByEmail(request.getEmail());
+        Optional<User> userOptionalUsername = userRepository.findUserByNameIgnoreCase(request.getUsername());
 
         if(userOptionalEmail.isPresent()){
             throw new IllegalArgumentException("user with this email exists");
@@ -104,7 +104,7 @@ public class AuthService {
 
         try{
             //we want to make sure the user is in database so we cant rely on authentication.getPrincipal() directly
-            user = repository.findUserByEmail(username).orElseThrow(() -> new IllegalStateException("user not found: " + username));
+            user = userRepository.findUserByEmail(username).orElseThrow(() -> new IllegalStateException("user not found: " + username));
         }catch (IllegalStateException e){
             throw e;
         }

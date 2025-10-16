@@ -1,6 +1,7 @@
 package com.chatapp.chatapp.controller;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.chatapp.chatapp.DTO.MessageRequest;
+import com.chatapp.chatapp.DTO.MessageResponse;
 import com.chatapp.chatapp.entity.Message;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.service.MessageService;
@@ -40,24 +42,20 @@ public class MessageController {
      */
     @MessageMapping("/chat") // where client broadcasts
     @SendTo("/topic/messages") // where server broadcasts
-    public Message handleMessage(@Payload MessageRequest messageRequest, Principal principal) {
+    public MessageResponse handleMessage(@Payload MessageRequest messageRequest, Principal principal) {
         
-        if (principal != null) {
-            Authentication auth = (Authentication) principal;
+        if (principal == null) {
+            ApplicationLogger.errorLog("Principal is null in handleMessage");
+            return null;
+        } 
 
-            if (auth.getPrincipal() instanceof User) {
-                User authenticatedUser = (User) auth.getPrincipal();
-                
-                if (authenticatedUser.getUid().equals(messageRequest.getSenderUid())) {
-                    Message message = new Message(messageRequest.getText(), authenticatedUser);
-                    messageService.postNewMessage(message);
-                    return message; //this broadcasts the message back to all subscribers
-                } else {
-                    ApplicationLogger.errorLog("user-sender mismatch: " + authenticatedUser.getUid() + " != " + messageRequest.getSenderUid());
-                }
-            }
-        } else {
-            ApplicationLogger.errorLog("Principal is null in handleMessage sender: " + messageRequest.getSenderUid());
+        Authentication auth = (Authentication) principal;
+
+        if (auth.getPrincipal() instanceof User) {
+            User authenticatedUser = (User) auth.getPrincipal();
+            Message message = new Message(messageRequest.getText(), authenticatedUser);
+            messageService.postNewMessage(message);
+            return new MessageResponse(message.getText(), message.getSender().getName()); // this broadcasts the message back to all subscribers
         }
 
         return null;
@@ -69,8 +67,16 @@ public class MessageController {
      * @return List of all Message objects in the system
      */
     @GetMapping
-    public List<Message> AllMessages(){
-        return messageService.getMessages();
+    public List<MessageResponse> allMessages(){
+        List<MessageResponse> messageListResponse = new ArrayList<>();
+        List<Message> messageListFetched = messageService.getMessages();
+
+        for(Message message : messageListFetched){
+            messageListResponse.add(new MessageResponse(message.getText(), message.getSender().getName()));
+        }
+
+        return messageListResponse;
+        
     }
 
 }
