@@ -39,7 +39,7 @@ public class AuthService {
      * @param request the authentication request containing email and password
      * @return TokenDTO containing the access token and refresh token cookie
      * @throws BadCredentialsException if the provided credentials are invalid
-     */
+    */
     public TokenDTO authenticate(AuthRequest request) throws BadCredentialsException {
         try{
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
