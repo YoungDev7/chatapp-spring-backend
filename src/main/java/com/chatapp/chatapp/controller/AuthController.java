@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthController {
     
-    private final AuthService service;
+    private final AuthService authService;
 
     /**
      * Authenticates a user with email and password credentials.
@@ -42,7 +42,7 @@ public class AuthController {
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticate(@RequestBody AuthRequest request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         try{
-            TokenDTO tokens = service.authenticate(request);
+            TokenDTO tokens = authService.authenticate(request);
             
             httpServletResponse.addHeader(HttpHeaders.SET_COOKIE, tokens.getRefreshCookie().toString());
             
@@ -76,7 +76,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
         try{
-            service.register(request);
+            authService.register(request);
             ApplicationLogger.requestLog(httpServletRequest, "user registered", request.getEmail(), 201);
             return ResponseEntity.status(201).body("registration successful");
         }catch (IllegalArgumentException e){
@@ -109,7 +109,7 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
         try{
-            AuthResponse response = service.refreshToken();
+            AuthResponse response = authService.refreshToken();
                         
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication != null ? authentication.getName() : "unknown";
