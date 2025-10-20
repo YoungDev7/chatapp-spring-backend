@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
-import com.chatapp.chatapp.util.ApplicationLogger;
-
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
 
-    private static final Logger logger = LoggerFactory.getLogger(ApplicationLogger.class);
+    private static final Logger log = LoggerFactory.getLogger(WebSocketHandshakeInterceptor.class);
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
@@ -37,19 +35,17 @@ public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
                 String actualToken = token.substring(7);
                 attributes.put("token", actualToken);
 
-                ApplicationLogger.websocketConnectionLog(servletRequest, "WebSocket Handshake successful", 101, servletRequest.getQueryString());                
+                log.info("[{}] WebSocket Handshake successful; query: {}",101, servletRequest.getQueryString());                
                 return true;
             } else {
                 attributes.put("token", null);
-                ApplicationLogger.websocketConnectionLog(servletRequest, "WebSocket Handshake failed: missing token or authentication header", 401, servletRequest.getQueryString());
+                log.warn("[{}] WebSocket Handshake failed: missing token or authentication header; query: {}", 401, servletRequest.getQueryString());
             }    
         }
         //incase failure accured due to request not being instance of ServletServerHttpRequest
-        logger.debug("handshake failed " + request.getClass());
+        log.debug("[{}] handshake failed {}",401, request.getClass());
         response.setStatusCode(HttpStatusCode.valueOf(401));
         response.getBody().write("WebSocket Handshake failed: missing token or authentication header".getBytes());
-        //otherwise use:
-        //response.getHeaders().add("X-Auth-Error", "WebSocket Handshake failed: missing token or authentication header");
         return false;
     }
 

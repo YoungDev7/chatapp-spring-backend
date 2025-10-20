@@ -1,5 +1,7 @@
 package com.chatapp.chatapp.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,7 +18,7 @@ import com.chatapp.chatapp.Dto.AuthResponse;
 import com.chatapp.chatapp.Dto.RegisterRequest;
 import com.chatapp.chatapp.Dto.TokenInfo;
 import com.chatapp.chatapp.service.AuthService;
-import com.chatapp.chatapp.util.ApplicationLogger;
+import com.chatapp.chatapp.util.LoggerUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,7 +30,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthController {
     
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+    
     private final AuthService authService;
+    private final LoggerUtil loggerUtil;
 
     /**
      * Authenticates a user with email and password credentials.
@@ -41,6 +46,9 @@ public class AuthController {
      */
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticate(@RequestBody AuthRequest request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        loggerUtil.setupRequestContext(httpServletRequest);
+        loggerUtil.setupUserContext(request.getEmail());
+        
         try{
             TokenInfo tokens = authService.authenticate(request);
             
@@ -48,17 +56,16 @@ public class AuthController {
             
             AuthResponse response = new AuthResponse(tokens.getAccessToken());
             
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = request.getEmail();
-            
-            ApplicationLogger.requestLog(httpServletRequest, "user logged in", username, 200);
+            log.info("[{}] user logged in", 200);
 
             return ResponseEntity.ok(response);
 
         }catch (BadCredentialsException e){
-            ApplicationLogger.requestLog(httpServletRequest, "user login failed", request.getEmail(), 401, e.getMessage());
+            log.warn("[{}] user login failed: {}", 401, e.getMessage());
             
             return ResponseEntity.status(401).body("invalid email or password");
+        }finally{
+            loggerUtil.clearContext();
         }
     }
 
@@ -75,25 +82,30 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
+        loggerUtil.setupRequestContext(httpServletRequest);
+        loggerUtil.setupUserContext(request.getEmail());
+        
         try{
             authService.register(request);
-            ApplicationLogger.requestLog(httpServletRequest, "user registered", request.getEmail(), 201);
+            log.info("[{}] user registered", 201);
             return ResponseEntity.status(201).body("registration successful");
         }catch (IllegalArgumentException e){
             String message = e.getMessage();
 
             if(message.equals("user with this email exists") || message.equals("user with this username exists")){
-                ApplicationLogger.requestLog(httpServletRequest, "registration failed" + message, request.getEmail(), 409);
+                log.warn("[{}] registration failed: {}", 409, message);
                 return ResponseEntity.status(409).body(message);    
             }
 
             if(message.contains("Invalid email format: ") || message.equals("password or username is blank")){
-                ApplicationLogger.requestLog(httpServletRequest, "registration failed" + message, request.getEmail(), 400);
+                log.warn("[{}] registration failed: {}", 400, message);
                 return ResponseEntity.status(400).body(message);
             }
             
-            ApplicationLogger.requestLog(httpServletRequest, "registration failed" + message, request.getEmail(), 403);
+            log.warn("[{}] registration failed: {}", 403, message);
             return ResponseEntity.status(403).body("registration fail");
+        }finally{
+            loggerUtil.clearContext();
         }
     }
 
@@ -108,19 +120,23 @@ public class AuthController {
      */
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
+        loggerUtil.setupRequestContext(httpServletRequest);
+        
         try{
             AuthResponse response = authService.refreshToken();
                         
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication != null ? authentication.getName() : "unknown";
-            ApplicationLogger.requestLog(httpServletRequest, "token refreshed", username, 200);
+            loggerUtil.setupUserContext(username);
+            log.info("[{}] token refreshed", 200);
 
             return ResponseEntity.ok(response);
 
         }catch (IllegalStateException e){
-            ApplicationLogger.requestLog(httpServletRequest, "user not found, how did we get here?", "unknown", 401, e.getMessage());
-
+            log.warn("[{}] user not found, how did we get here?: {}", 401, e.getMessage());
             return ResponseEntity.status(401).body("invalid token, user not found");
+        }finally{
+            loggerUtil.clearContext();
         }
     }
 
@@ -134,10 +150,13 @@ public class AuthController {
      */
     @GetMapping("/validateToken")
     public ResponseEntity<?> validateToken(HttpServletRequest httpServletRequest){
+        loggerUtil.setupRequestContext(httpServletRequest);
+        
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication != null ? authentication.getName() : "unknown";
-
-        ApplicationLogger.requestLog(httpServletRequest, "token validated", username, 200);
+        loggerUtil.setupUserContext(username);
+        log.info("[{}] token validated", 200);
+        loggerUtil.clearContext();
 
         return ResponseEntity.ok("valid");
     }

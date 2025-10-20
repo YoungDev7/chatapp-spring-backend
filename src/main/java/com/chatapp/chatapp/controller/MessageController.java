@@ -4,6 +4,8 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -18,11 +20,12 @@ import com.chatapp.chatapp.Dto.MessageResponse;
 import com.chatapp.chatapp.entity.Message;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.service.MessageService;
-import com.chatapp.chatapp.util.ApplicationLogger;
 
 @RestController
 @RequestMapping("/api/v1/messages")
 public class MessageController {
+
+    private static final Logger log = LoggerFactory.getLogger(MessageController.class);
 
     private final MessageService messageService;
 
@@ -45,7 +48,7 @@ public class MessageController {
     public MessageResponse handleMessage(@Payload MessageRequest messageRequest, Principal principal) {
         
         if (principal == null) {
-            ApplicationLogger.errorLog("Principal is null in handleMessage");
+            log.error("Principal is null in handleMessage");
             return null;
         } 
 

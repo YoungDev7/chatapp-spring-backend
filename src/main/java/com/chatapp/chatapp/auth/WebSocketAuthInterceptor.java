@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 
 import com.chatapp.chatapp.Dto.JwtValidationResult;
 import com.chatapp.chatapp.service.JwtService;
-import com.chatapp.chatapp.util.ApplicationLogger;
+import com.chatapp.chatapp.util.LoggerUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,9 +26,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WebSocketAuthInterceptor implements ChannelInterceptor  {
 
+    
+    private static final Logger log = LoggerFactory.getLogger(WebSocketAuthInterceptor.class);
+    
+    private final LoggerUtil loggerUtil;
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-    private static final Logger logger = LoggerFactory.getLogger(ApplicationLogger.class);
+
             
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -49,7 +53,11 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor  {
             token = extractToken(accessor);
         } catch (IllegalArgumentException e) {
             accessor.setHeader("simpConnectMessage", "Authentication failed");
-            ApplicationLogger.websocketConnectionLog("connection failed" + e.getMessage(), "unknown", accessor.getCommand() != null ? accessor.getCommand().toString() : "unknown", channel.toString(), null);
+            log.warn("WebSocket connection failed: {}; command: {}; channel: {}", 
+                e.getMessage(), 
+                accessor.getCommand() != null ? accessor.getCommand().toString() : "unknown",
+                channel.toString()
+            );
 
             return null;
         }
@@ -58,7 +66,11 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor  {
                     
         if (!validationResult.isValid()) {
             accessor.setHeader("simpConnectMessage", "Authentication failed");
-            ApplicationLogger.websocketConnectionLog("connection failed " + validationResult.getStatus(), "unknown", accessor.getCommand() != null ? accessor.getCommand().toString() : "unknown", channel.toString(), token);
+            log.warn("WebSocket connection failed: {}; command: {}; channel: {};", 
+                validationResult.getStatus(),
+                accessor.getCommand() != null ? accessor.getCommand().toString() : "unknown",
+                channel.toString()
+            );
 
             return null;
         }
@@ -75,21 +87,25 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor  {
             
             SecurityContextHolder.getContext().setAuthentication(authentication);
             accessor.setUser(authentication);
+            loggerUtil.setupUserContext(authentication.getName());
 
-            ApplicationLogger.websocketConnectionLog("connection successful", userDetails.getUsername(), accessor.getCommand() != null ? accessor.getCommand().toString() : "unknown", channel.toString(), token);
+            log.info("WebSocket connection successful; command: {}; channel: {};", 
+                accessor.getCommand() != null ? accessor.getCommand().toString() : "unknown",
+                channel.toString()
+            );
             return message;
 
         } catch (Exception e) {
             accessor.setHeader("simpConnectMessage", "Authentication failed");
-            ApplicationLogger.websocketConnectionLog("connection failed " + e.getMessage(),  "unknown", accessor.getCommand() != null ? accessor.getCommand().toString() : "unknown", channel.toString(), token);
+            log.warn("WebSocket connection failed: {}; command: {}; channel: {};", 
+                e.getMessage(),
+                accessor.getCommand() != null ? accessor.getCommand().toString() : "unknown",
+                channel.toString()
+            );
 
             return null;
         }
-            
-            
-        
     }
-    
     
     private String extractToken(StompHeaderAccessor accessor) {
         // Try to get from Authorization header (STOMP headers)

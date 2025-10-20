@@ -1,5 +1,7 @@
 package com.chatapp.chatapp.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -10,7 +12,7 @@ import com.chatapp.chatapp.Dto.JwtValidationResult;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.TokenRepository;
 import com.chatapp.chatapp.repository.UserRepository;
-import com.chatapp.chatapp.util.ApplicationLogger;
+import com.chatapp.chatapp.util.LoggerUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,9 +22,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LogoutService implements LogoutHandler{
     
+    private static final Logger log = LoggerFactory.getLogger(LogoutService.class);
+    
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final JwtService jwtService;
+    private final LoggerUtil loggerUtil;
 
     /**
      * Handles user logout by validating the JWT access token and revoking all user tokens.
@@ -45,18 +50,20 @@ public class LogoutService implements LogoutHandler{
 
         final String authHeader = request.getHeader("Authorization");
         
+        loggerUtil.setupRequestContext(request);
+        
         try{
             if (authHeader == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Authorization header missing and no refresh token in cookies");
-                ApplicationLogger.requestLogFilter(request, "Authorization header missing and no refresh token in cookies", HttpServletResponse.SC_UNAUTHORIZED, null);
+                log.warn("[{}] Authorization header missing and no refresh token in cookies", HttpServletResponse.SC_UNAUTHORIZED);
                 return; 
             }
     
             if (!authHeader.startsWith("Bearer ")) {
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
               response.getWriter().write("Invalid authorization format");
-              ApplicationLogger.requestLogFilter(request, "Invalid authorization format (missing Bearer)", HttpServletResponse.SC_UNAUTHORIZED, authHeader);
+              log.warn("[{}] Invalid authorization format (missing Bearer)", HttpServletResponse.SC_UNAUTHORIZED);
               return; 
             }
     
@@ -67,16 +74,21 @@ public class LogoutService implements LogoutHandler{
             if(!validationResult.isValid()){
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Invalid token " + validationResult.getStatus());
-                ApplicationLogger.requestLogFilter(request, "Invalid access token", HttpServletResponse.SC_UNAUTHORIZED, authHeader, validationResult.getUsername(), validationResult.getStatus().toString());
+                log.warn("[{}] Invalid access token {}; username: {}", 
+                    HttpServletResponse.SC_UNAUTHORIZED, 
+                    validationResult.getStatus().toString(),
+                    validationResult.getUsername());
                 return; 
             }
+    
+            loggerUtil.setupUserContext(validationResult.getUsername());
     
             try{
                 user = userRepository.findUserByEmail(validationResult.getUsername()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
                 var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getUid());
             
                 if (validUserTokens.isEmpty()){
-                    ApplicationLogger.requestLog(request, "logout successful", validationResult.getUsername(), 200);
+                    log.info("[{}] logout successful", 200);
                     response.getWriter().write("logout successful");
                     response.setStatus(HttpServletResponse.SC_OK);
                     return;
@@ -93,19 +105,20 @@ public class LogoutService implements LogoutHandler{
                     SecurityContextHolder.clearContext();
                 }
 
-                ApplicationLogger.requestLog(request, "logout successful", validationResult.getUsername(), 200);
+                log.info("[{}] logout successful", 200);
                 response.getWriter().write("logout successful");
                 response.setStatus(HttpServletResponse.SC_OK);
 
             } catch (Exception e){
-                ApplicationLogger.warningLog("[LOG] Logout failed: " + e.getMessage());
+                log.warn("[{}] Logout failed: {}", HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
                 response.getWriter().write("logout failed");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
         }catch (Exception e){
-            ApplicationLogger.errorLog(e.getMessage());
-            e.printStackTrace();
+            log.error("Logout error: {}", e.getMessage(), e);
+        }finally{
+            loggerUtil.clearContext();
         }
 
     }
