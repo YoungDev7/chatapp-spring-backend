@@ -5,8 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +16,7 @@ import com.chatapp.chatapp.Dto.AuthRequest;
 import com.chatapp.chatapp.Dto.AuthResponse;
 import com.chatapp.chatapp.Dto.RegisterRequest;
 import com.chatapp.chatapp.Dto.TokenInfo;
+import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.service.AuthService;
 import com.chatapp.chatapp.util.LoggerUtil;
 
@@ -125,13 +125,15 @@ public class AuthController {
         try{
             AuthResponse response = authService.refreshToken();
                         
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication != null ? authentication.getName() : "unknown";
-            loggerUtil.setupUserContext(username);
+            User user = authService.getAuthenticatedUser();
+            loggerUtil.setupUserContext(user.getName());
             log.info("[{}] token refreshed", 200);
 
             return ResponseEntity.ok(response);
 
+        }catch (AuthenticationException e){
+            log.warn("[{}] Authentication error: {}", 401, e.getMessage());
+            return ResponseEntity.status(401).body("Authentication error");
         }catch (IllegalStateException e){
             log.warn("[{}] user not found, how did we get here?: {}", 401, e.getMessage());
             return ResponseEntity.status(401).body("invalid token, user not found");
@@ -152,13 +154,39 @@ public class AuthController {
     public ResponseEntity<?> validateToken(HttpServletRequest httpServletRequest){
         loggerUtil.setupRequestContext(httpServletRequest);
         
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication != null ? authentication.getName() : "unknown";
-        loggerUtil.setupUserContext(username);
+        User user = authService.getAuthenticatedUser();
+        loggerUtil.setupUserContext(user.getName());
         log.info("[{}] token validated", 200);
         loggerUtil.clearContext();
 
         return ResponseEntity.ok("valid");
     }
+
+    /**
+     * Logs out the currently authenticated user.
+     * Revokes all valid tokens for the user and clears the security context.
+     * 
+     * @param httpServletRequest The HTTP servlet request for logging purposes
+     * @return ResponseEntity with success message (200) on successful logout,
+     *         or unauthorized error (401) if logout fails due to authentication issues
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest httpServletRequest) {
+        loggerUtil.setupRequestContext(httpServletRequest);
+
+        try{
+            authService.logout();
+            User user = authService.getAuthenticatedUser();
+            loggerUtil.setupUserContext(user.getName());
+            log.info("[{}] logout successful", 200);
+            return ResponseEntity.ok("logout successful");
+        } catch (Exception e){
+            log.warn("[{}] Logout failed: {}", HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+            return ResponseEntity.status(HttpServletResponse.SC_UNAUTHORIZED).body("logout failed");
+        } finally {
+            loggerUtil.clearContext();
+        }  
+    }
+    
         
 }

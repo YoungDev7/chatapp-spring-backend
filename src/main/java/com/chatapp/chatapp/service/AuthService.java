@@ -5,8 +5,10 @@ import java.util.Optional;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -97,21 +99,51 @@ public class AuthService {
      * @return AuthResponse containing the new access token
      * @throws IllegalStateException if the authenticated user cannot be found in the database
      */
-    public AuthResponse refreshToken() throws IllegalStateException{
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getPrincipal() instanceof User ? ((User) authentication.getPrincipal()).getEmail() : null;
+    public AuthResponse refreshToken() throws IllegalStateException, AuthenticationException{
         User user;
 
         try{
             //we want to make sure the user is in database so we cant rely on authentication.getPrincipal() directly
-            user = userRepository.findUserByEmail(username).orElseThrow(() -> new IllegalStateException("user not found: " + username));
-        }catch (IllegalStateException e){
+            //thats a lie because we are aready querying database in filter when authenticating refresh token
+            user = getAuthenticatedUser();
+            User foundUser = userRepository.findUserByEmail(user.getEmail()).orElseThrow(() -> new IllegalStateException("user not found: " + user.getEmail()));
+        }catch (Exception e){
             throw e;
         }
 
         var newAccessToken = jwtService.generateToken(user);
 
         return new AuthResponse(newAccessToken);
+    }
+
+    /**
+     * Logs out the currently authenticated user by revoking all their valid tokens
+     * and clearing the security context.
+     * 
+     * @throws IllegalStateException if the authenticated user cannot be found
+     * @throws AuthenticationException if there is no valid authentication
+     * @throws NullPointerException if required authentication data is null
+     * @throws Exception for any other unexpected errors during logout
+     */
+    public void logout() throws IllegalStateException, NullPointerException, AuthenticationException, Exception {
+        User user = getAuthenticatedUser();
+        
+        var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getUid());
+            
+        if (validUserTokens.isEmpty()){
+            return;
+        }
+
+        validUserTokens.forEach(token -> {
+            token.setExpired(true);
+            token.setRevoked(true);
+        });
+
+        tokenRepository.saveAll(validUserTokens);
+
+        if(SecurityContextHolder.getContext().getAuthentication() != null){
+            SecurityContextHolder.clearContext();
+        }        
     }
 
     //TODO: there is no logic that changes the expired status when the token expires
@@ -143,6 +175,20 @@ public class AuthService {
     private boolean isValidEmail(String email) {
         EmailValidator validator = EmailValidator.getInstance();
         return validator.isValid(email);
+    }
+
+    public User getAuthenticatedUser() throws AuthenticationException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null) {
+            throw new InsufficientAuthenticationException("No authentication found");
+        }
+
+        if (!(authentication.getPrincipal() instanceof User)) {
+            throw new InsufficientAuthenticationException("Invalid authentication principal type");
+        }
+
+        return (User) authentication.getPrincipal();
     }
 
 }
