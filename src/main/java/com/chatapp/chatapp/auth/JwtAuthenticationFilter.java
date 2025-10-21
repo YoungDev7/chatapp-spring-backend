@@ -56,9 +56,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
     throws ServletException, IOException {
-        
-      //TODO: refactor ? authentication is based on if both tokens are present or not, shouldnt it be determined by target API endpoint?
-      
       loggerUtil.setupRequestContext(request);
       log.debug("filter reached");
 
