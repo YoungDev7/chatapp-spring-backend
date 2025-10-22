@@ -2,7 +2,6 @@ CREATE TABLE token (
     id INT AUTO_INCREMENT PRIMARY KEY,
     token VARCHAR(512) UNIQUE,
     revoked BOOLEAN DEFAULT FALSE,
-    expired BOOLEAN DEFAULT FALSE,
     user_uid VARCHAR(36),
     
     CONSTRAINT fk_token_user FOREIGN KEY (user_uid) REFERENCES user(UID) ON DELETE CASCADE

@@ -57,7 +57,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
     throws ServletException, IOException {
       loggerUtil.setupRequestContext(request);
-      log.debug("filter reached");
 
       try{
         final String authHeader = request.getHeader("Authorization");
@@ -168,7 +167,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
           if (SecurityContextHolder.getContext().getAuthentication() == null) {  
               var isTokenInDatabase = tokenRepository.findByToken(refreshToken)
-                  .map(t -> !t.isExpired() && !t.isRevoked())
+                  .map(t -> !t.isRevoked())
                   .orElse(false);
                   
               if (validationResultRefresh.isValid() && isTokenInDatabase) {

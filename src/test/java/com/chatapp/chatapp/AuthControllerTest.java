@@ -1,8 +1,10 @@
 package com.chatapp.chatapp;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -171,7 +173,7 @@ public class AuthControllerTest {
     // 3) valid access token but expired refresh
     @ParameterizedTest
     @MethodSource("refreshTokenTestCases")
-    void shouldDiffrentRefreshRequests(Function<User, String> accessTokenGenerator, Function<User, String> refreshTokenGenerator, HttpStatus expectedStatus, String expectedMessage){
+    void shouldHandleDiffrentRefreshRequests(Function<User, String> accessTokenGenerator, Function<User, String> refreshTokenGenerator, HttpStatus expectedStatus, String expectedMessage, List<String> expectedCookie){
         //setup
         String url = "http://localhost:" + port + "/api/v1/auth/refresh";
         
@@ -194,7 +196,6 @@ public class AuthControllerTest {
             var refreshTokenEntity = Token.builder()
                 .user(user)
                 .token(refreshToken)
-                .expired(false)
                 .revoked(false)
                 .build();
 
@@ -222,6 +223,15 @@ public class AuthControllerTest {
         assertEquals(expectedStatus, response.getStatusCode());
         assertTrue(response.getBody().contains(expectedMessage));
         
+        if (expectedCookie != null) {
+            List<String> setCookieHeaders = response.getHeaders().get("Set-Cookie");
+            assertNotNull(setCookieHeaders);
+            assertTrue(setCookieHeaders.size() > 0);
+        } else {
+            List<String> setCookieHeaders = response.getHeaders().get("Set-Cookie");
+            assertTrue(setCookieHeaders == null || setCookieHeaders.isEmpty());
+        }
+        
         // tear down
         TransactionStatus cleanupTransaction = transactionManager.getTransaction(new DefaultTransactionDefinition());
         try {
@@ -236,24 +246,27 @@ public class AuthControllerTest {
         MockJwtService mockJwtService = new MockJwtService();
 
         return Stream.of(
-            // [accessTokenGenerator, refreshTokenGenerator, expectedStatus, expectedMessage]
+            // [accessTokenGenerator, refreshTokenGenerator, expectedStatus, expectedMessage, expectedCookie]
             new Object[]{
                 (Function<User, String>) mockJwtService::generateExpiredToken,
                 (Function<User, String>) mockJwtService::generateValidToken,
                 HttpStatus.OK, 
-                "access_token"
+                "access_token",
+                List.of("refreshToken=token; Path=/; HttpOnly; SameSite=Strict")
             },
             new Object[]{
                 (Function<User, String>) mockJwtService::generateInvalidSignatureToken,
                 (Function<User, String>) mockJwtService::generateValidToken,
                 HttpStatus.UNAUTHORIZED, 
-                "Invalid token INVALID_SIGNATURE"
+                "Invalid token INVALID_SIGNATURE",
+                null
             },
             new Object[]{
                 (Function<User, String>) mockJwtService::generateValidToken,
                 (Function<User, String>) mockJwtService::generateExpiredToken,
                 HttpStatus.UNAUTHORIZED, 
-                "Invalid token EXPIRED"
+                "Invalid token EXPIRED",
+                null
             }
         );
     }

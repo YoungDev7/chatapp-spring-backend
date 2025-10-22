@@ -14,7 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.chatapp.chatapp.Dto.AuthRequest;
-import com.chatapp.chatapp.Dto.AuthResponse;
 import com.chatapp.chatapp.Dto.RegisterRequest;
 import com.chatapp.chatapp.Dto.TokenInfo;
 import com.chatapp.chatapp.entity.Token;
@@ -95,25 +94,22 @@ public class AuthService {
 
     /**
      * Refreshes the access token for the currently authenticated user.
+     * Performs token rotation by generating new access and refresh tokens,
+     * revoking all existing valid tokens, and saving the new refresh token.
      * 
-     * @return AuthResponse containing the new access token
-     * @throws IllegalStateException if the authenticated user cannot be found in the database
+     * @return TokenInfo containing the new access token and refresh token cookie
+     * @throws AuthenticationException if the authenticated user cannot be found in the database
      */
-    public AuthResponse refreshToken() throws IllegalStateException, AuthenticationException{
-        User user;
-
-        try{
-            //we want to make sure the user is in database so we cant rely on authentication.getPrincipal() directly
-            //thats a lie because we are aready querying database in filter when authenticating refresh token
-            user = getAuthenticatedUser();
-            User foundUser = userRepository.findUserByEmail(user.getEmail()).orElseThrow(() -> new IllegalStateException("user not found: " + user.getEmail()));
-        }catch (Exception e){
-            throw e;
-        }
+    public TokenInfo refreshToken() throws AuthenticationException{
+         User user = getAuthenticatedUser();
 
         var newAccessToken = jwtService.generateToken(user);
+        var newRefreshToken = jwtService.generateRefreshToken(user);
+        revokeAllUserTokens(user);
+        saveUserToken(user, newRefreshToken);
+        var refreshCookie = jwtService.createRefreshTokenCookie(newRefreshToken);
 
-        return new AuthResponse(newAccessToken);
+        return new TokenInfo(newAccessToken, refreshCookie);
     }
 
     /**
@@ -135,7 +131,6 @@ public class AuthService {
         }
 
         validUserTokens.forEach(token -> {
-            token.setExpired(true);
             token.setRevoked(true);
         });
 
@@ -146,12 +141,10 @@ public class AuthService {
         }        
     }
 
-    //TODO: there is no logic that changes the expired status when the token expires
     private void saveUserToken(User user, String jwtToken) {
         var token = Token.builder()
             .user(user)
             .token(jwtToken)
-            .expired(false)
             .revoked(false)
             .build();
         tokenRepository.save(token);
@@ -165,7 +158,6 @@ public class AuthService {
         }
 
         validUserTokens.forEach(token -> {
-          token.setExpired(true);
           token.setRevoked(true);
         });
 

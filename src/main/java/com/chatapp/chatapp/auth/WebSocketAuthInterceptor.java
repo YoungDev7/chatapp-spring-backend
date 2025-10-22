@@ -133,11 +133,11 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor  {
         if(accessor.getSessionAttributes() != null) {
             token = (String) accessor.getSessionAttributes().get("token");
         }
+        
         if (token != null) {
             return token;
         }
 
-        // If no token found, throw an exception
         throw new IllegalArgumentException("Authorization header is missing");
     }
 }

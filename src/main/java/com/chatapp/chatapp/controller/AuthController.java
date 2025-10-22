@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -111,10 +110,12 @@ public class AuthController {
 
     /**
      * Refreshes an expired access token using a valid refresh token.
+     * Performs token rotation by generating new access and refresh tokens,
+     * revoking all existing valid tokens for the user.
      * The refresh token is expected to be provided via HTTP-only cookie.
      * 
      * @param httpServletRequest The HTTP servlet request for logging purposes
-     * @param httpServletResponse The HTTP servlet response (unused but kept for consistency)
+     * @param httpServletResponse The HTTP servlet response to set the new refresh token cookie
      * @return ResponseEntity containing a new access token (200) on success,
      *         or unauthorized error (401) if refresh token is invalid or user not found
      */
@@ -123,7 +124,9 @@ public class AuthController {
         loggerUtil.setupRequestContext(httpServletRequest);
         
         try{
-            AuthResponse response = authService.refreshToken();
+            TokenInfo tokenInfo = authService.refreshToken();
+            httpServletResponse.addHeader(HttpHeaders.SET_COOKIE, tokenInfo.getRefreshCookie().toString());
+            AuthResponse response = new AuthResponse(tokenInfo.getAccessToken());            
                         
             User user = authService.getAuthenticatedUser();
             loggerUtil.setupUserContext(user.getName());
@@ -131,12 +134,9 @@ public class AuthController {
 
             return ResponseEntity.ok(response);
 
-        }catch (AuthenticationException e){
-            log.warn("[{}] Authentication error: {}", 401, e.getMessage());
-            return ResponseEntity.status(401).body("Authentication error");
-        }catch (IllegalStateException e){
-            log.warn("[{}] user not found, how did we get here?: {}", 401, e.getMessage());
-            return ResponseEntity.status(401).body("invalid token, user not found");
+        }catch (Exception e){
+            log.warn("[{}] Refresh error: {}", 401, e.getMessage());
+            return ResponseEntity.status(401).body("Refresh error");
         }finally{
             loggerUtil.clearContext();
         }

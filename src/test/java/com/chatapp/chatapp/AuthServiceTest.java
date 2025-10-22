@@ -11,7 +11,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +29,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.chatapp.chatapp.Dto.AuthRequest;
-import com.chatapp.chatapp.Dto.AuthResponse;
 import com.chatapp.chatapp.Dto.TokenInfo;
 import com.chatapp.chatapp.entity.Token;
 import com.chatapp.chatapp.entity.User;
@@ -88,8 +86,8 @@ class AuthServiceTest {
             .build();
 
         existingTokens = List.of(
-            Token.builder().token("old-token-1").expired(false).revoked(false).build(),
-            Token.builder().token("old-token-2").expired(false).revoked(false).build()
+            Token.builder().token("old-token-1").revoked(false).build(),
+            Token.builder().token("old-token-2").revoked(false).build()
         );
     }
     
@@ -151,18 +149,22 @@ class AuthServiceTest {
             when(securityContext.getAuthentication()).thenReturn(authentication);
             when(authentication.getPrincipal()).thenReturn(mockUser);
             
-            when(repository.findUserByEmail(mockUser.getEmail())).thenReturn(Optional.of(mockUser));
             when(jwtService.generateToken(mockUser)).thenReturn(mockJwtToken);
+            when(jwtService.generateRefreshToken(mockUser)).thenReturn(mockRefreshToken);
+            when(jwtService.createRefreshTokenCookie(mockRefreshToken)).thenReturn(mockRefreshCookie);
+            when(tokenRepository.findAllValidTokenByUser(mockUser.getUid())).thenReturn(List.of());
 
             //execute
-            AuthResponse result = authService.refreshToken();
+            TokenInfo result = authService.refreshToken();
 
             //verify
             assertNotNull(result.getAccessToken());
-            System.out.println("Access Token: " + result.getAccessToken()); 
+            assertNotNull(result.getRefreshCookie());
 
-            verify(repository).findUserByEmail(mockUser.getEmail());
             verify(jwtService).generateToken(mockUser);
+            verify(jwtService).generateRefreshToken(mockUser);
+            verify(tokenRepository).findAllValidTokenByUser(mockUser.getUid());
+            verify(tokenRepository).save(any(Token.class));
         }
     }
 
@@ -204,7 +206,6 @@ class AuthServiceTest {
         verify(tokenRepository).saveAll(argThat(tokens -> {
             List<Token> tokenList = (List<Token>) tokens;
             return tokenList.size() == 2 && 
-                tokenList.stream().allMatch(Token::isExpired) &&
                 tokenList.stream().allMatch(Token::isRevoked);
         }));
     }

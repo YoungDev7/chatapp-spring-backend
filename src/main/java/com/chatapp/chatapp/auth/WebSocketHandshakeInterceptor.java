@@ -28,7 +28,6 @@ public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
         if (request instanceof ServletServerHttpRequest) {
             HttpServletRequest servletRequest = ((ServletServerHttpRequest) request).getServletRequest();
             
-            // Get specific parameter
             String token = servletRequest.getParameter("token");
 
             if (token != null && token.startsWith("Bearer ")) {
