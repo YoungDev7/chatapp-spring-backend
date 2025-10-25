@@ -175,9 +175,9 @@ public class AuthController {
         loggerUtil.setupRequestContext(httpServletRequest);
 
         try{
-            authService.logout();
             User user = authService.getAuthenticatedUser();
             loggerUtil.setupUserContext(user.getName());
+            authService.logout();
             log.info("[{}] logout successful", 200);
             return ResponseEntity.ok("logout successful");
         } catch (Exception e){
