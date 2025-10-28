@@ -44,6 +44,7 @@ services:
       - maven-cache:/root/.m2
       # Exclude target from volume mount to prevent conflicts
       - /app/target
+      - ./logs:/logs
 
   db:
     image: mysql:8.0
