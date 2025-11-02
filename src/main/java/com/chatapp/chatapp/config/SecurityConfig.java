@@ -16,7 +16,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-import com.chatapp.chatapp.auth.JwtAuthenticationFilter;
+import com.chatapp.chatapp.filter.JwtAuthenticationFilter;
+import com.chatapp.chatapp.filter.LoggingFilter;
+import com.chatapp.chatapp.filter.UserContextFilter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,8 +35,9 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
     private final CorsConfigurationSource corsSource;
-
-
+    private final LoggingFilter loggingFilter;
+    private final UserContextFilter userContextFilter;
+    
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -50,7 +53,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(loggingFilter, JwtAuthenticationFilter.class)
+                .addFilterAfter(userContextFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

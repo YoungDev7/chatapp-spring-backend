@@ -15,6 +15,24 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Interceptor that handles the initial WebSocket handshake before establishing a connection.
+ * 
+ * <p>This interceptor validates that a JWT token is provided during the WebSocket handshake
+ * and extracts it from the query parameters. The token is stored in the session attributes
+ * for later use by {@link WebSocketAuthInterceptor}.</p>
+ * 
+ * <p>Key responsibilities:</p>
+ * <ul>
+ *   <li>Validates the presence of a JWT token in the query parameters during handshake</li>
+ *   <li>Ensures the token is in the correct "Bearer " format</li>
+ *   <li>Stores the extracted token in session attributes for authentication</li>
+ *   <li>Rejects handshake attempts without valid authentication</li>
+ * </ul>
+ * 
+ * @see WebSocketAuthInterceptor
+ * @see WebSocketConfig
+ */
 @Component
 @RequiredArgsConstructor
 public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {

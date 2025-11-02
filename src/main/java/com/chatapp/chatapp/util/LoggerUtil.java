@@ -1,7 +1,5 @@
 package com.chatapp.chatapp.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
@@ -13,8 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
  */
 @Component
 public class LoggerUtil {
-    private static final Logger log = LoggerFactory.getLogger(LoggerUtil.class);
-
     /**
      * Sets up MDC context from an HTTP request.
      * Call this at the beginning of request processing.

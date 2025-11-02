@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -15,24 +14,23 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.chatapp.chatapp.Dto.MessageRequest;
-import com.chatapp.chatapp.Dto.MessageResponse;
+import com.chatapp.chatapp.dto.MessageRequest;
+import com.chatapp.chatapp.dto.MessageResponse;
 import com.chatapp.chatapp.entity.Message;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.service.MessageService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/v1/messages")
+@RequiredArgsConstructor
 public class MessageController {
 
     private static final Logger log = LoggerFactory.getLogger(MessageController.class);
 
     private final MessageService messageService;
-
-    @Autowired
-    public MessageController(MessageService messageService) {
-        this.messageService = messageService;
-    }
 
     /**
      * Handles incoming WebSocket messages from authenticated users.
@@ -70,7 +68,8 @@ public class MessageController {
      * @return List of all Message objects in the system
      */
     @GetMapping
-    public List<MessageResponse> allMessages(){
+    public List<MessageResponse> AllMessages(HttpServletRequest httpServletRequest){
+
         List<MessageResponse> messageListResponse = new ArrayList<>();
         List<Message> messageListFetched = messageService.getMessages();
 
@@ -78,6 +77,8 @@ public class MessageController {
             messageListResponse.add(new MessageResponse(message.getText(), message.getSender().getName()));
         }
 
+        log.info("[{}] all messages returned", 200);
+        
         return messageListResponse;
         
     }

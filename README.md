@@ -43,8 +43,7 @@ src/main/java/com/chatapp/chatapp/
 │   └── WebSocketConfig.java      # WebSocket configuration
 ├── controller/
 │   ├── AuthController.java       # Authentication endpoints
-│   ├── MessageController.java    # Message endpoints & WebSocket
-│   └── UserController.java       # User management endpoints
+│   └── MessageController.java    # Message endpoints & WebSocket
 ├── DTO/
 │   ├── AuthRequest.java          # Login request DTO
 │   ├── AuthResponse.java         # Login response DTO
@@ -56,18 +55,20 @@ src/main/java/com/chatapp/chatapp/
 │   ├── User.java                # User entity
 │   ├── Message.java             # Message entity
 │   └── Token.java               # Token entity
+├── filter/
+│   ├── LoggingFilter.java       # Request logging filter
+│   └── UserContextFilter.java   # User context setup filter
 ├── repository/
 │   ├── UserRepository.java     # User data access
 │   ├── MessageRepository.java  # Message data access
 │   └── TokenRepository.java     # Token data access
 ├── service/
-│   └── LogoutService.java        # Logout handling
 │   ├── AuthService.java         # Authentication services
 │   ├── JwtService.java          # JWT token services
 │   ├── MessageService.java      # Message services
 │   └── UserService.java         # User services
 ├── util/
-│   └── ApplicationLogger.java   # Centralized logging utility
+│   └── LoggerUtil.java          # MDC logging utility
 └── ChatappApplication.java      # Main application class
 
 src/main/resources/
@@ -267,37 +268,33 @@ CREATE TABLE token (
 
 ### Security Features
 - Password hashing with BCrypt
-- Token-based authentication
-- Refresh token rotation
+- Token-based authentication with JWT
+- Refresh token rotation and revocation
 - CORS configuration for frontend integration
-- Request/response logging via [`ApplicationLogger`](src/main/java/com/chatapp/chatapp/util/ApplicationLogger.java)
+- Comprehensive request/response logging with MDC context
+- Filter chain security with custom authentication filters
 
 ### Authentication Flow
-1. User registers with [`POST /api/v1/auth/register`](src/main/java/com/chatapp/chatapp/auth/AuthController.java)
-2. User logs in with [`POST /api/v1/auth/login`](src/main/java/com/chatapp/chatapp/auth/AuthController.java)
-3. JWT access token and refresh token returned
-4. Access token used for API authentication
-5. Refresh token used to obtain new access tokens
+1. User registers with [`POST /api/v1/auth/register`](src/main/java/com/chatapp/chatapp/controller/AuthController.java)
+2. User logs in with [`POST /api/v1/auth/authenticate`](src/main/java/com/chatapp/chatapp/controller/AuthController.java)
+3. JWT access token returned in response, refresh token set as HTTP-only cookie
+4. Access token used in Authorization header for API authentication
+5. Refresh token automatically sent via cookie to obtain new access tokens
+6. User logs out with [`POST /api/v1/auth/logout`](src/main/java/com/chatapp/chatapp/controller/AuthController.java) to revoke all tokens
 
 ## 📡 API Endpoints
 
 ### Authentication
+- `POST /api/v1/auth/authenticate` - User login with email and password
 - `POST /api/v1/auth/register` - User registration
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/refresh` - Token refresh
-- `GET /api/v1/auth/validateToken` - Token validation
-- `POST /api/v1/auth/logout` - User logout
+- `POST /api/v1/auth/refresh` - Refresh access token using refresh token
+- `GET /api/v1/auth/validateToken` - Validate current access token
+- `POST /api/v1/auth/logout` - User logout (revokes all tokens)
 
 ### Messages
 - `GET /api/v1/messages` - Get all messages
 - WebSocket endpoint: `/app/chat` - Send message
 - WebSocket topic: `/topic/messages` - Receive messages
-
-### Users
-- `GET /api/v1/users` - Get all users
-- `POST /api/v1/users` - Create user
-- `PUT /api/v1/users/{id}` - Update user
-- `DELETE /api/v1/users/{id}` - Delete user
 
 ## 🔌 WebSocket Configuration
 
@@ -341,12 +338,35 @@ src/test/java/com/chatapp/chatapp/
 
 ## 📊 Logging
 
-### ApplicationLogger Utility
-Centralized logging utility in [`ApplicationLogger.java`](src/main/java/com/chatapp/chatapp/util/ApplicationLogger.java) provides:
-- Request/response logging
-- User action tracking
-- Error logging with context
-- Debug logging for development
+### Logging Architecture
+The application uses a filter-based logging approach with MDC (Mapped Diagnostic Context)
+
+#### LoggerUtil
+Centralized utility in [`LoggerUtil.java`](src/main/java/com/chatapp/chatapp/util/LoggerUtil.java) that provides:
+- MDC context setup for HTTP requests (path, client IP, HTTP method)
+- User context setup (username)
+- Context cleanup after request processing
+
+#### LoggingFilter
+Request logging filter in [`LoggingFilter.java`](src/main/java/com/chatapp/chatapp/filter/LoggingFilter.java):
+- First filter in the security chain
+- Sets up MDC context at the start of each request
+- Ensures proper cleanup of logging context
+- Provides comprehensive request tracking
+
+#### UserContextFilter
+User context filter in [`UserContextFilter.java`](src/main/java/com/chatapp/chatapp/filter/UserContextFilter.java):
+- Executes after JWT authentication
+- Extracts authenticated user information
+- Enriches logs with user-specific details
+- Enables user-aware logging throughout the request lifecycle
+
+### Logging Configuration
+All logging is configured via [`logback-spring.xml`](src/main/resources/logback-spring.xml) with support for:
+- Console and file-based logging
+- MDC variables in log patterns (username, path, method, clientIP)
+- Different log levels per package
+- Request/response tracking with correlation IDs
 
 ## 🔧 Database Migrations
 

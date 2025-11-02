@@ -1,4 +1,4 @@
-package com.chatapp.chatapp.auth;
+package com.chatapp.chatapp.filter;
 
 import java.io.IOException;
 
@@ -13,11 +13,10 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.chatapp.chatapp.Dto.JwtValidationResult;
 import com.chatapp.chatapp.config.SecurityConfig;
+import com.chatapp.chatapp.dto.JwtValidationResult;
 import com.chatapp.chatapp.repository.TokenRepository;
 import com.chatapp.chatapp.service.JwtService;
-import com.chatapp.chatapp.util.LoggerUtil;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,7 +25,24 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
-
+/**
+ * JWT authentication filter that validates access and refresh tokens for incoming HTTP requests.
+ * 
+ * <p>This filter intercepts all incoming HTTP requests (except whitelisted paths) and validates
+ * JWT tokens provided in the Authorization header. It handles both access token validation for
+ * regular requests and refresh token validation for token refresh endpoints.</p>
+ * 
+ * <p>Key responsibilities:</p>
+ * <ul>
+ *   <li>Validates JWT access tokens from the Authorization header</li>
+ *   <li>Validates JWT refresh tokens from HTTP-only cookies for the /refresh endpoint</li>
+ *   <li>Sets up the Spring Security authentication context for valid tokens</li>
+ *   <li>Performs database validation for refresh tokens to ensure they haven't been revoked</li>
+ * </ul>
+ * 
+ * @see JwtService
+ * @see SecurityConfig#WHITE_LIST_URL
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter{
@@ -36,7 +52,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final TokenRepository tokenRepository;
-    private final LoggerUtil loggerUtil;
     
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -56,12 +71,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
     throws ServletException, IOException {
-      loggerUtil.setupRequestContext(request);
-
-      try{
         final String authHeader = request.getHeader("Authorization");
         String refreshToken = extractRefreshTokenFromCookie(request);
-        
+
         //
         //ACCESS TOKEN
         //
@@ -92,7 +104,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         final String jwt = authHeader.substring(7);
         UserDetails userDetails;
         JwtValidationResult validationResultAccess = jwtService.validateToken(jwt);
-        loggerUtil.setupUserContext(validationResultAccess.getUsername());
         
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             //TODO: this block needs refactor: it should say that user has not been found in the database...
@@ -102,7 +113,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             } catch (UsernameNotFoundException e){
               response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
               response.getWriter().write("Invalid token " + validationResultAccess.getStatus());
-              log.error("[{}] Invalid access token {}; {}", HttpServletResponse.SC_UNAUTHORIZED, 
+              log.error("[{}] Invalid access token {}; exception: {}", HttpServletResponse.SC_UNAUTHORIZED, 
                   validationResultAccess.getStatus().toString(), e.getMessage());
               return;
             }
@@ -132,8 +143,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             log.warn("[{}] wrong endpoint", HttpServletResponse.SC_BAD_REQUEST);
             return; 
           }
-
-          loggerUtil.setupUserContext(validationResultAccess.getUsername());
           
           if (!validationResultAccess.isUsableEvenIfExpired()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -146,7 +155,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
           //REFRESH TOKEN
           UserDetails userDetailsRefresh;
           JwtValidationResult validationResultRefresh = jwtService.validateToken(refreshToken);	
-          loggerUtil.setupUserContext(validationResultRefresh.getUsername());
           
           try{
             userDetailsRefresh = this.userDetailsService.loadUserByUsername(validationResultRefresh.getUsername());
@@ -186,9 +194,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
         // If we got here, authentication was successful
         filterChain.doFilter(request, response);
-      }finally{
-        loggerUtil.clearContext();
-      }
     }    
 
     private void setAuthentication(HttpServletRequest request, UserDetails userDetails) {

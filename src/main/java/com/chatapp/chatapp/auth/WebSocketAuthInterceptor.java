@@ -16,12 +16,32 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
-import com.chatapp.chatapp.Dto.JwtValidationResult;
+import com.chatapp.chatapp.config.WebSocketConfig;
+import com.chatapp.chatapp.dto.JwtValidationResult;
 import com.chatapp.chatapp.service.JwtService;
 import com.chatapp.chatapp.util.LoggerUtil;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Interceptor that handles authentication for WebSocket STOMP connections.
+ * 
+ * <p>This interceptor validates JWT tokens during WebSocket CONNECT commands and ensures
+ * that the authenticated user is properly set in the Spring Security context for all
+ * subsequent WebSocket messages.</p>
+ * 
+ * <p>Key responsibilities:</p>
+ * <ul>
+ *   <li>Intercepts STOMP CONNECT commands to validate JWT tokens</li>
+ *   <li>Extracts JWT tokens from multiple sources (Authorization header, query parameters, session attributes)</li>
+ *   <li>Validates tokens using JwtService and loads user details</li>
+ *   <li>Sets up Spring Security authentication for the WebSocket session</li>
+ *   <li>Maintains authentication context for non-CONNECT messages</li>
+ * </ul>
+ * 
+ * @see WebSocketHandshakeInterceptor
+ * @see WebSocketConfig
+ */
 @Component
 @RequiredArgsConstructor
 public class WebSocketAuthInterceptor implements ChannelInterceptor  {
@@ -87,7 +107,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor  {
             
             SecurityContextHolder.getContext().setAuthentication(authentication);
             accessor.setUser(authentication);
-            loggerUtil.setupUserContext(authentication.getName());
+            //loggerUtil.setupUserContext(authentication.getName());
 
             log.info("WebSocket connection successful; command: {}; channel: {};", 
                 accessor.getCommand() != null ? accessor.getCommand().toString() : "unknown",

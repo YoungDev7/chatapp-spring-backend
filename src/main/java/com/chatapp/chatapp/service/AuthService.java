@@ -13,9 +13,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.chatapp.chatapp.Dto.AuthRequest;
-import com.chatapp.chatapp.Dto.RegisterRequest;
-import com.chatapp.chatapp.Dto.TokenInfo;
+import com.chatapp.chatapp.dto.AuthRequest;
+import com.chatapp.chatapp.dto.RegisterRequest;
+import com.chatapp.chatapp.dto.TokenInfo;
 import com.chatapp.chatapp.entity.Token;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.TokenRepository;

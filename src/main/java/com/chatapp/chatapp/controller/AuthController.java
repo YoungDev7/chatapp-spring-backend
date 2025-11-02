@@ -11,13 +11,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.chatapp.chatapp.Dto.AuthRequest;
-import com.chatapp.chatapp.Dto.AuthResponse;
-import com.chatapp.chatapp.Dto.RegisterRequest;
-import com.chatapp.chatapp.Dto.TokenInfo;
-import com.chatapp.chatapp.entity.User;
+import com.chatapp.chatapp.dto.AuthRequest;
+import com.chatapp.chatapp.dto.AuthResponse;
+import com.chatapp.chatapp.dto.RegisterRequest;
+import com.chatapp.chatapp.dto.TokenInfo;
 import com.chatapp.chatapp.service.AuthService;
-import com.chatapp.chatapp.util.LoggerUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,7 +30,6 @@ public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     
     private final AuthService authService;
-    private final LoggerUtil loggerUtil;
 
     /**
      * Authenticates a user with email and password credentials.
@@ -45,8 +42,6 @@ public class AuthController {
      */
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticate(@RequestBody AuthRequest request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        loggerUtil.setupRequestContext(httpServletRequest);
-        loggerUtil.setupUserContext(request.getEmail());
         
         try{
             TokenInfo tokens = authService.authenticate(request);
@@ -63,8 +58,6 @@ public class AuthController {
             log.warn("[{}] user login failed: {}", 401, e.getMessage());
             
             return ResponseEntity.status(401).body("invalid email or password");
-        }finally{
-            loggerUtil.clearContext();
         }
     }
 
@@ -81,8 +74,6 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
-        loggerUtil.setupRequestContext(httpServletRequest);
-        loggerUtil.setupUserContext(request.getEmail());
         
         try{
             authService.register(request);
@@ -103,8 +94,6 @@ public class AuthController {
             
             log.warn("[{}] registration failed: {}", 403, message);
             return ResponseEntity.status(403).body("registration fail");
-        }finally{
-            loggerUtil.clearContext();
         }
     }
 
@@ -121,15 +110,11 @@ public class AuthController {
      */
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
-        loggerUtil.setupRequestContext(httpServletRequest);
-        
         try{
             TokenInfo tokenInfo = authService.refreshToken();
             httpServletResponse.addHeader(HttpHeaders.SET_COOKIE, tokenInfo.getRefreshCookie().toString());
             AuthResponse response = new AuthResponse(tokenInfo.getAccessToken());            
                         
-            User user = authService.getAuthenticatedUser();
-            loggerUtil.setupUserContext(user.getName());
             log.info("[{}] token refreshed", 200);
 
             return ResponseEntity.ok(response);
@@ -137,8 +122,6 @@ public class AuthController {
         }catch (Exception e){
             log.warn("[{}] Refresh error: {}", 401, e.getMessage());
             return ResponseEntity.status(401).body("Refresh error");
-        }finally{
-            loggerUtil.clearContext();
         }
     }
 
@@ -152,13 +135,8 @@ public class AuthController {
      */
     @GetMapping("/validateToken")
     public ResponseEntity<?> validateToken(HttpServletRequest httpServletRequest){
-        loggerUtil.setupRequestContext(httpServletRequest);
-        
-        User user = authService.getAuthenticatedUser();
-        loggerUtil.setupUserContext(user.getName());
         log.info("[{}] token validated", 200);
-        loggerUtil.clearContext();
-
+        
         return ResponseEntity.ok("valid");
     }
 
@@ -172,20 +150,14 @@ public class AuthController {
      */
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest httpServletRequest) {
-        loggerUtil.setupRequestContext(httpServletRequest);
-
         try{
-            User user = authService.getAuthenticatedUser();
-            loggerUtil.setupUserContext(user.getName());
             authService.logout();
             log.info("[{}] logout successful", 200);
             return ResponseEntity.ok("logout successful");
         } catch (Exception e){
             log.warn("[{}] Logout failed: {}", HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
             return ResponseEntity.status(HttpServletResponse.SC_UNAUTHORIZED).body("logout failed");
-        } finally {
-            loggerUtil.clearContext();
-        }  
+        }
     }
     
         

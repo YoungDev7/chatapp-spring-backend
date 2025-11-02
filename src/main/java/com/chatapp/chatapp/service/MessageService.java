@@ -3,7 +3,6 @@ package com.chatapp.chatapp.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -12,20 +11,15 @@ import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.MessageRepository;
 import com.chatapp.chatapp.repository.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+
 
 @Service
+@RequiredArgsConstructor
 public class MessageService {
     
-    @Autowired
-    //private SimpMessagingTemplate messagingTemplate;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
-
-    @Autowired
-    public MessageService(MessageRepository messageRepository, UserRepository userRepository) {
-        this.messageRepository = messageRepository;
-        this.userRepository = userRepository;
-    }
 
     //get messages
     public List<Message> getMessages(){
