@@ -151,6 +151,9 @@ Configuration Files:
    # CORS
    CORS_ALLOWED_ORIGINS=
 
+   UID=1000
+   GID=1000
+
    # Application Ports
    BACKEND_PORT=8080
    FRONTEND_PORT=3000
