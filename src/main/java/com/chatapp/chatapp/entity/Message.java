@@ -1,5 +1,7 @@
 package com.chatapp.chatapp.entity;
 
+import java.time.ZonedDateTime;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
@@ -23,6 +25,7 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
+    
     @Column(name = "text")
     private String text;
 
@@ -31,9 +34,24 @@ public class Message {
     @JsonIgnoreProperties({"password", "authorities", "accountNonExpired", 
                           "accountNonLocked", "credentialsNonExpired", "enabled", "username"})
     private User sender;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chatview_id", nullable = false)
+    @JsonIgnoreProperties({"users", "messages"})
+    private ChatView chatView;
+    
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private ZonedDateTime createdAt;
 
     public Message(String text, User sender) {
         this.text = text;
         this.sender = sender;
+    }
+    
+    public Message(String text, User sender, ChatView chatView, ZonedDateTime createdAt) {
+        this.text = text;
+        this.sender = sender;
+        this.chatView = chatView;
+        this.createdAt = createdAt;
     }
 }

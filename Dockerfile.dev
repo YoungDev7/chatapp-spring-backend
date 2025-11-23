@@ -5,6 +5,9 @@ WORKDIR /app
 ENV SPRING_DEVTOOLS_RESTART_POLL_INTERVAL=2s
 ENV SPRING_DEVTOOLS_RESTART_QUIET_PERIOD=1s
 
+# Create .m2 directory with proper permissions
+RUN mkdir -p /root/.m2 && chmod -R 755 /root/.m2
+
 # Copy Maven wrapper
 COPY --chmod=0755 mvnw mvnw
 COPY .mvn/ .mvn/

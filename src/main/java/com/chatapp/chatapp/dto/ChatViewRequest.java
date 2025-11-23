@@ -1,7 +1,5 @@
 package com.chatapp.chatapp.dto;
 
-import java.time.ZonedDateTime;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,8 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MessageRequest {
-    private String text;
-    private String chatViewId;
-    private ZonedDateTime createdAt;
+public class ChatViewRequest {
+    private String name;
 }

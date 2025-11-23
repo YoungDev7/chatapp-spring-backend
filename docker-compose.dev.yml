@@ -13,6 +13,7 @@ services:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      DOCKER_PROFILE: docker_dev
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: DEBUG
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
       SPRING_DEVTOOLS_RESTART_ENABLED: "true"
@@ -26,11 +27,18 @@ services:
       APPLICATION_SECURITY_JWT_SECRETKEY: ${JWT_SECRET_KEY}
       APPLICATION_SECURITY_JWT_EXPIRATION: ${JWT_EXPIRATION}
       APPLICATION_SECURITY_JWT_REFRESHTOKEN_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
     networks:
       - react-spring
       - spring-mysql
+      - spring-rabbitmq
     depends_on:
       db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     ports:
       - "${BACKEND_PORT}:8080"
@@ -40,7 +48,7 @@ services:
       - ./pom.xml:/app/pom.xml
       # Add these for better file watching
       - ./target/classes:/app/target/classes
-      # Maven cache volume to persist dependencies
+      # Maven cache volume to persist dependencies across rebuilds
       - maven-cache:/root/.m2
       # Exclude target from volume mount to prevent conflicts
       - /app/target
@@ -66,6 +74,27 @@ services:
       - spring-mysql
     ports:
       - "${DB_PORT}:3306"
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    restart: always
+    user: "999:999"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - spring-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # RabbitMQ Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
 
   frontend:
     build:
@@ -96,8 +125,10 @@ services:
 
 volumes:
   db-data: {}
-  maven-cache: {}  # Add this line
+  maven-cache: {}
+  rabbitmq-data: {}
 
 networks:
   react-spring: {}
   spring-mysql: {}
+  spring-rabbitmq: {}

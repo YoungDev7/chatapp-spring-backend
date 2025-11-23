@@ -25,13 +25,13 @@ public class User implements UserDetails {
     @Column(name = "uid")
     private String uid;
 
-    @Column(name = "name")
+    @Column(name = "name", unique = true)
     private String name;
 
     @Column(name = "password")
     private String password;
     
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     private String email;
 
     public User(String name, String password, String email) {

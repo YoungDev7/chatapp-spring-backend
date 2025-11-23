@@ -1,8 +1,10 @@
 package com.chatapp.chatapp.service;
 
+import java.security.Principal;
 import java.util.Optional;
 
 import org.apache.commons.validator.routines.EmailValidator;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
@@ -182,5 +184,60 @@ public class AuthService {
 
         return (User) authentication.getPrincipal();
     }
+
+    public User getAuthenticatedUserFromStompHeader(StompHeaderAccessor headerAccessor){
+        Principal principal = headerAccessor.getUser();
+
+        if(principal == null){
+            throw new InsufficientAuthenticationException("principal is null");
+        }
+
+        // Check if principal is UsernamePasswordAuthenticationToken
+        if(principal instanceof UsernamePasswordAuthenticationToken){
+            UsernamePasswordAuthenticationToken authToken = (UsernamePasswordAuthenticationToken) principal;
+            Object principalObj = authToken.getPrincipal();
+            
+            if(!(principalObj instanceof User)){
+                throw new InsufficientAuthenticationException("Invalid authentication principal type");
+            }
+            
+            return (User) principalObj;
+        }
+
+        // Direct User instance (shouldn't normally happen, but keep as fallback)
+        if(principal instanceof User){
+            return (User) principal;
+        }
+
+        throw new InsufficientAuthenticationException("Invalid authentication principal type");
+    }
+
+    public User getAuthenticatedUserFromStompHeader(Principal principal){
+
+        if(principal == null){
+            throw new InsufficientAuthenticationException("principal is null");
+        }
+
+        // Check if principal is UsernamePasswordAuthenticationToken
+        if(principal instanceof UsernamePasswordAuthenticationToken){
+            UsernamePasswordAuthenticationToken authToken = (UsernamePasswordAuthenticationToken) principal;
+            Object principalObj = authToken.getPrincipal();
+
+            if(!(principalObj instanceof User)){
+                throw new InsufficientAuthenticationException("Invalid authentication principal type");
+            }
+
+            return (User) principalObj;
+        }
+
+        // Direct User instance (shouldn't normally happen, but keep as fallback)
+        if(principal instanceof User){
+            return (User) principal;
+        }
+
+        throw new InsufficientAuthenticationException("Invalid authentication principal type");
+    }
+
+    
 
 }

@@ -10,6 +10,7 @@ services:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      DOCKER_PROFILE: docker_prod
       DB_URL: ${DB_URL}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
@@ -17,12 +18,19 @@ services:
       APPLICATION_SECURITY_JWT_SECRETKEY: ${JWT_SECRET_KEY}
       APPLICATION_SECURITY_JWT_EXPIRATION: ${JWT_EXPIRATION}
       APPLICATION_SECURITY_JWT_REFRESHTOKEN_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
     user: "${UID:-1000}:${GID:-1000}"
     networks:
       - react-spring
       - spring-mysql
+      - spring-rabbitmq
     depends_on:
       db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     ports:
       - "${BACKEND_PORT}:8080"
@@ -49,6 +57,27 @@ services:
     ports:
       - "${DB_PORT}:3306"
 
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    restart: always
+    user: "999:999"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - spring-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # RabbitMQ Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
   frontend:
     build:
       context: ../chatapp-react-frontend 
@@ -63,7 +92,9 @@ services:
 
 volumes:
   db-data: {}
+  rabbitmq-data: {}
 
 networks:
   react-spring: {}
   spring-mysql: {}
+  spring-rabbitmq: {}
