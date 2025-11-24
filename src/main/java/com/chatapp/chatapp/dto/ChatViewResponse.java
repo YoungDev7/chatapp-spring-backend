@@ -13,4 +13,5 @@ public class ChatViewResponse {
     private String id;
     private String name;
     private Set<String> userUids;
+    private int messageCount;
 }

@@ -139,7 +139,8 @@ public class ChatViewService {
         return new ChatViewResponse(
             chatView.getId(),
             chatView.getName(),
-            userUids
+            userUids,
+            chatView.getMessages().size()
         );
     }
 }
