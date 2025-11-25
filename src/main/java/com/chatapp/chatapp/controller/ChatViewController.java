@@ -45,14 +45,11 @@ public class ChatViewController {
      * Creates a new chatview
      */
     @PostMapping
-    public ResponseEntity<ChatViewResponse> createChatView(
-            @RequestBody ChatViewRequest request, 
-            Authentication authentication) {
+    public ResponseEntity<ChatViewResponse> createChatView(@RequestBody ChatViewRequest request) {
         
-        User user = (User) authentication.getPrincipal();
-        ChatViewResponse response = chatViewService.createChatView(request, user.getUid());
+        ChatViewResponse response = chatViewService.createChatView(request);
         
-        log.info("Created chatview {} by user {}", response.getId(), user.getUid());
+        log.info("Created chatview {}", response.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     

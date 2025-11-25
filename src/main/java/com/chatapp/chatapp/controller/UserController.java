@@ -52,10 +52,10 @@ public class UserController {
             return ResponseEntity.ok().body(searchResult);
         }catch(IllegalArgumentException e){
             log.info("unsuccessful user search: {}", e);
-            return ResponseEntity.status(400).body(e);
+            return ResponseEntity.status(400).body(e.getMessage());
         }catch(UsernameNotFoundException e){
             log.info("unsuccessful user search: {}", e);
-            return ResponseEntity.status(400).body(e);
+            return ResponseEntity.status(400).body(e.getMessage());
         }
     }
 }

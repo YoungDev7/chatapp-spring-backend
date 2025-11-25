@@ -27,24 +27,47 @@ public class ChatViewService {
     private final ChatViewRepository chatViewRepository;
     private final UserRepository userRepository;
     private final RabbitMQService rabbitMQService;
-    
+    private final AuthService authService;
+
     /**
      * Creates a new chatview
      */
     @Transactional
-    public ChatViewResponse createChatView(ChatViewRequest request, String creatorUid) {
+    public ChatViewResponse createChatView(ChatViewRequest request) {
         ChatView chatView = new ChatView(request.getName());
-        
-        User creator = userRepository.findUserByUid(creatorUid)
-            .orElseThrow(() -> new IllegalStateException("User not found: " + creatorUid));
-        
+        User creator = authService.getAuthenticatedUser();
+
+        // Add creator first
         chatView.addUser(creator);
+
+        // Add other users
+        for(String userUid : request.getUserUids()){
+            if (userUid.equals(creator.getUid())) {
+                continue; // Skip if already added as creator
+            }
+            try{
+                User member = userRepository.findUserByUid(userUid)
+                    .orElseThrow(() -> new IllegalStateException("User not found: " + userUid));
+                chatView.addUser(member);
+            } catch(Exception e){
+                log.warn("Failed to add user {} to chatview: {}", userUid, e.getMessage());
+            }
+        }
+
+        // Save to generate ID
         chatView = chatViewRepository.save(chatView);
         
-        // Create RabbitMQ queue for creator
-        rabbitMQService.createUserQueueForChatView(chatView.getId(), creatorUid);
+        // Now create queues with valid chatView ID
+        for(User user : chatView.getUsers()) {
+            try {
+                rabbitMQService.createUserQueueForChatView(chatView.getId(), user.getUid());
+            } catch(Exception e) {
+                log.error("Failed to create queue for user {} in chatview {}: {}", 
+                    user.getUid(), chatView.getId(), e.getMessage());
+            }
+        }
         
-        log.info("Created chatview {} by user {}", chatView.getId(), creatorUid);
+        log.info("Created chatview {}", chatView.getId());
         
         return mapToChatViewResponse(chatView);
     }
