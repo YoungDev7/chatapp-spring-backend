@@ -34,10 +34,20 @@ public class User implements UserDetails {
     @Column(name = "email", unique = true)
     private String email;
 
+    @Column(name ="avatar_link", nullable = true)
+    private String avatarLink;
+
     public User(String name, String password, String email) {
         this.name = name;
         this.password = password;
         this.email = email;
+    }
+
+    public User(String name, String password, String email, String avatarLink) {
+        this.name = name;
+        this.password = password;
+        this.email = email;
+        this.avatarLink = avatarLink;
     }
 
     @Override
