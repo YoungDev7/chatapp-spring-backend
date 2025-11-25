@@ -1,11 +1,15 @@
 package com.chatapp.chatapp.service;
 
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.chatapp.chatapp.dto.UserResponse;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.UserRepository;
 
@@ -51,8 +55,30 @@ public class UserService {
             throw new IllegalArgumentException("avatar link string is null");
         }
 
+        newAvatarLink = newAvatarLink.trim();
+
         User user = authService.getAuthenticatedUser();
         user.setAvatarLink(newAvatarLink);
         userRepository.save(user);
+    }
+
+    public UserResponse searchUser(String searchQuery) throws IllegalArgumentException, UsernameNotFoundException {
+        if(searchQuery == null){
+            throw new IllegalArgumentException("search query string is null");
+        }
+
+        searchQuery = searchQuery.trim();
+
+        if(searchQuery.isBlank()){
+            throw new IllegalArgumentException("search query string is empty or blank");
+        }
+
+        Optional<User> userOptional = userRepository.findUserByNameIgnoreCase(searchQuery);
+
+        if(userOptional.isPresent()){
+            return new UserResponse(userOptional.get().getUid(), userOptional.get().getName());
+        }else {
+            throw new UsernameNotFoundException("user " + searchQuery + " not found");
+        }
     }
 }
