@@ -30,7 +30,7 @@ public class CorsConfig {
                             "http://localhost:80",
                             "http://127.0.0.1:80" 
                         )
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                         .allowedHeaders("*")
                         .exposedHeaders("Authorization")
                         .allowCredentials(true) 
@@ -54,7 +54,7 @@ public class CorsConfig {
                  "http://localhost",
                  "http://127.0.0.1"
         ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setExposedHeaders(Arrays.asList("Authorization", "X-Refresh-Token"));
         configuration.setAllowCredentials(true);
