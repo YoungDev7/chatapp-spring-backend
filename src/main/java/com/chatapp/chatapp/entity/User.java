@@ -12,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -28,6 +29,7 @@ public class User implements UserDetails {
     @Column(name = "name", unique = true)
     private String name;
 
+    @Size(min = 6)
     @Column(name = "password")
     private String password;
     

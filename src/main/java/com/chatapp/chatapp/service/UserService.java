@@ -14,7 +14,6 @@ import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.UserRepository;
 
 @Service
-
 public class UserService {
     
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
