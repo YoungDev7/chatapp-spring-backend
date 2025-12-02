@@ -54,14 +54,17 @@ public class Config {
             chatViewRepository.insertChatViewWithCustomId("1", "global");
             
             ChatView globalChatView = chatViewRepository.findByIdWithUsers("1").orElseThrow();
-            List<User> allUsers = userRepository.findAll();
-            
-            for (User user : allUsers) {
-                globalChatView.addUser(user);
-            }
             
             chatViewRepository.save(globalChatView);
             log.info("global chat view is missing, new one was generated");
+        }
+
+        //todo temporary, fix later
+        ChatView globalChatView = chatViewRepository.findByIdWithUsers("1").orElseThrow();
+        List<User> allUsers = userRepository.findAll();
+
+        for (User user : allUsers) {
+            globalChatView.addUser(user);
         }
     }
 

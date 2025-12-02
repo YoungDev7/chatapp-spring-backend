@@ -1,6 +1,7 @@
 package com.chatapp.chatapp.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -155,14 +156,16 @@ public class ChatViewService {
     }
     
     private ChatViewResponse mapToChatViewResponse(ChatView chatView) {
-        Set<String> userUids = chatView.getUsers().stream()
-            .map(User::getUid)
-            .collect(Collectors.toSet());
+        Map<String, String> userAvatars = chatView.getUsers().stream()
+            .collect(Collectors.toMap(
+                User::getUid,
+                user -> user.getAvatarLink() != null ? user.getAvatarLink() : ""
+            ));
         
         return new ChatViewResponse(
             chatView.getId(),
             chatView.getName(),
-            userUids,
+            userAvatars,
             chatView.getMessages().size()
         );
     }
