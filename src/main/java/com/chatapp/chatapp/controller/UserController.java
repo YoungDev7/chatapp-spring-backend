@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.chatapp.chatapp.dto.AvatarRequest;
+import com.chatapp.chatapp.dto.AvatarResponse;
 import com.chatapp.chatapp.dto.UserResponse;
 import com.chatapp.chatapp.service.UserService;
 
@@ -26,16 +28,17 @@ public class UserController {
     private final UserService userService; 
 
     @GetMapping("/avatar")
-    public ResponseEntity<?> avatar(){
-        String avatarLink = userService.getUserAvatar();
+    public ResponseEntity<AvatarResponse> avatar(){
+        AvatarResponse avatarLink = userService.getUserAvatar();
         log.info("retrieved users avatar");
+
         return ResponseEntity.ok(avatarLink);
     }
 
     @PatchMapping("/avatar")
-    public ResponseEntity<?> avatar(@RequestBody String newAvatarLink) {
+    public ResponseEntity<?> avatar(@RequestBody AvatarRequest avatarRequest) {
         try{
-            userService.updateUserAvatar(newAvatarLink);
+            userService.updateUserAvatar(avatarRequest.getAvatarLink());
             log.info("updated users avatar");
             return ResponseEntity.ok("avatar updated");
         }catch(IllegalArgumentException e){

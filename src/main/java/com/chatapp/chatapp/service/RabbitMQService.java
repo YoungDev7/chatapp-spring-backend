@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -102,17 +101,9 @@ public class RabbitMQService {
         List<MessageResponse> messages = new ArrayList<>();
         
         try {
-            Message message;
-            while ((message = rabbitTemplate.receive(queueName, 100)) != null) {
-                try {
-                    MessageResponse messageResponse = objectMapper.readValue(
-                        message.getBody(), 
-                        MessageResponse.class
-                    );
-                    messages.add(messageResponse);
-                } catch (Exception e) {
-                    log.error("Error processing message from queue {}: {}", queueName, e.getMessage());
-                }
+            MessageResponse messageResponse;
+            while ((messageResponse = (MessageResponse) rabbitTemplate.receiveAndConvert(queueName, 100)) != null) {
+                messages.add(messageResponse);
             }
             
             if (!messages.isEmpty()) {

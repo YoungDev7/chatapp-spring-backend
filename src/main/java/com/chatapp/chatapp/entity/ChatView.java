@@ -3,6 +3,7 @@ package com.chatapp.chatapp.entity;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -33,7 +34,7 @@ public class ChatView {
     @Column(name = "name", nullable = false)
     private String name;
     
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinTable(
         name = "chatview_users",
         joinColumns = @JoinColumn(name = "chatview_id"),
@@ -43,7 +44,7 @@ public class ChatView {
     @EqualsAndHashCode.Exclude
     private Set<User> users = new HashSet<>();
     
-    @OneToMany(mappedBy = "chatView", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "chatView", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Set<Message> messages = new HashSet<>();

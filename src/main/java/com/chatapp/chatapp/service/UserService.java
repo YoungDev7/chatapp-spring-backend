@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.chatapp.chatapp.dto.AvatarResponse;
 import com.chatapp.chatapp.dto.UserResponse;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.UserRepository;
@@ -44,9 +45,10 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public String getUserAvatar(){
+    public AvatarResponse getUserAvatar(){
         User user = authService.getAuthenticatedUser();
-        return user.getAvatarLink();
+        AvatarResponse response = new AvatarResponse(user.getAvatarLink());
+        return response;
     }
 
     public void updateUserAvatar(String newAvatarLink) throws IllegalArgumentException{
