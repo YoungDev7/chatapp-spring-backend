@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,31 +41,18 @@ public class ChatViewService {
 
         // Add creator first
         chatView.addUser(creator);
-
+        chatView = chatViewRepository.save(chatView);
+        rabbitMQService.createUserQueueForChatView(chatView.getId(), creator.getUid());
+        
         // Add other users
         for(String userUid : request.getUserUids()){
             if (userUid.equals(creator.getUid())) {
                 continue; // Skip if already added as creator
             }
             try{
-                User member = userRepository.findUserByUid(userUid)
-                    .orElseThrow(() -> new IllegalStateException("User not found: " + userUid));
-                chatView.addUser(member);
+                addUserToChatView(chatView.getId(), userUid);
             } catch(Exception e){
                 log.warn("Failed to add user {} to chatview: {}", userUid, e.getMessage());
-            }
-        }
-
-        // Save to generate ID
-        chatView = chatViewRepository.save(chatView);
-        
-        // Now create queues with valid chatView ID
-        for(User user : chatView.getUsers()) {
-            try {
-                rabbitMQService.createUserQueueForChatView(chatView.getId(), user.getUid());
-            } catch(Exception e) {
-                log.error("Failed to create queue for user {} in chatview {}: {}", 
-                    user.getUid(), chatView.getId(), e.getMessage());
             }
         }
         
@@ -77,7 +65,14 @@ public class ChatViewService {
      * Adds a user to a chatview
      */
     @Transactional
-    public void addUserToChatView(String chatViewId, String userUid) {
+    public void addUserToChatView(String chatViewId, String userUid) throws AccessDeniedException, IllegalStateException {
+        User authenticatedUser =  authService.getAuthenticatedUser();
+
+        // Check if current user is a member of the chatview
+        if (!isUserInChatView(chatViewId, authenticatedUser.getUid())) {
+            throw new AccessDeniedException("user is not member of chatview " + chatViewId);
+        }
+        
         ChatView chatView = chatViewRepository.findByIdWithUsers(chatViewId)
             .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));
         
@@ -89,8 +84,6 @@ public class ChatViewService {
         
         // Create RabbitMQ queue for new user
         rabbitMQService.createUserQueueForChatView(chatViewId, userUid);
-        
-        log.info("Added user {} to chatview {}", userUid, chatViewId);
     }
     
     /**

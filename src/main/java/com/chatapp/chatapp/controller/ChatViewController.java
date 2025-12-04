@@ -142,19 +142,17 @@ public class ChatViewController {
     @PostMapping("/{chatViewId}/users/{userUid}")
     public ResponseEntity<Void> addUserToChatView(
             @PathVariable String chatViewId,
-            @PathVariable String userUid,
-            Authentication authentication) {
+            @PathVariable String userUid) {
         
-        User currentUser = (User) authentication.getPrincipal();
-        
-        // Check if current user is a member of the chatview
-        if (!chatViewService.isUserInChatView(chatViewId, currentUser.getUid())) {
+        try{
+            chatViewService.addUserToChatView(chatViewId, userUid);
+            log.info("Added user {} to chatview {}", userUid, chatViewId);
+            return ResponseEntity.ok().build();
+        }catch(Exception e){
+            log.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         
-        chatViewService.addUserToChatView(chatViewId, userUid);
-        log.info("Added user {} to chatview {} by user {}", userUid, chatViewId, currentUser.getUid());
-        return ResponseEntity.ok().build();
     }
     
     /**
