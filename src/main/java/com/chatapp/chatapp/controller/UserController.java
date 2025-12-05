@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,17 +48,17 @@ public class UserController {
         }        
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<?> searchUser(@RequestBody String searchQuery){
+    @GetMapping("/search/{query}")
+    public ResponseEntity<?> searchUser(@PathVariable String query){
         try{
-            UserResponse searchResult = userService.searchUser(searchQuery);
-            log.info("returned successful search result: {}; search query: {}", searchResult.getUid(), searchQuery);
+            UserResponse searchResult = userService.searchUser(query);
+            log.info("returned successful search result: {}; search query: {}", searchResult.getUid(), query);
             return ResponseEntity.ok().body(searchResult);
         }catch(IllegalArgumentException e){
-            log.info("unsuccessful user search: {}", e);
+            log.info("unsuccessful user search: {}", e.getMessage());
             return ResponseEntity.status(400).body(e.getMessage());
         }catch(UsernameNotFoundException e){
-            log.info("unsuccessful user search: {}", e);
+            log.info("unsuccessful user search: {}", e.getMessage());
             return ResponseEntity.status(400).body(e.getMessage());
         }
     }
