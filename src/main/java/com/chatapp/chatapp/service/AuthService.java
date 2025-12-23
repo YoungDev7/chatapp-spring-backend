@@ -27,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    
+
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final JwtService jwtService;
@@ -40,10 +40,11 @@ public class AuthService {
      * @param request the authentication request containing email and password
      * @return TokenInfo containing the access token and refresh token cookie
      * @throws BadCredentialsException if the provided credentials are invalid
-    */
+     */
     public TokenInfo authenticate(AuthRequest request) throws BadCredentialsException {
-        try{
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        try {
+            Authentication authentication = authenticationManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
             var user = (User) authentication.getPrincipal();
             var jwtToken = jwtService.generateToken(user);
             var refreshToken = jwtService.generateRefreshToken(user);
@@ -52,8 +53,8 @@ public class AuthService {
             var refreshCookie = jwtService.createRefreshTokenCookie(refreshToken);
 
             return new TokenInfo(jwtToken, refreshCookie);
-            
-        }catch(BadCredentialsException e){
+
+        } catch (BadCredentialsException e) {
             throw e;
         }
     }
@@ -61,19 +62,22 @@ public class AuthService {
     /**
      * Registers a new user with the provided information after validating the data.
      * 
-     * @param request the registration request containing username, password, and email
-     * @throws IllegalArgumentException if the email already exists, username already exists,
-     *                                  email format is invalid, or username/password is blank
+     * @param request the registration request containing username, password, and
+     *                email
+     * @throws IllegalArgumentException if the email already exists, username
+     *                                  already exists,
+     *                                  email format is invalid, or
+     *                                  username/password is blank
      */
-    public void register(RegisterRequest request) throws IllegalArgumentException{
+    public void register(RegisterRequest request) throws IllegalArgumentException {
         Optional<User> userOptionalEmail = userRepository.findUserByEmail(request.getEmail());
         Optional<User> userOptionalUsername = userRepository.findUserByNameIgnoreCase(request.getUsername());
 
-        if(userOptionalEmail.isPresent()){
+        if (userOptionalEmail.isPresent()) {
             throw new IllegalArgumentException("user with this email exists");
         }
-        
-        if(userOptionalUsername.isPresent()){
+
+        if (userOptionalUsername.isPresent()) {
             throw new IllegalArgumentException("user with this username exists");
         }
 
@@ -81,13 +85,13 @@ public class AuthService {
             throw new IllegalArgumentException("Invalid email format: " + request.getEmail());
         }
 
-        if(request.getUsername().isBlank() || request.getPassword().isBlank()){
+        if (request.getUsername().isBlank() || request.getPassword().isBlank()) {
             throw new IllegalArgumentException("password or username is blank");
         }
 
-        try{
+        try {
             userService.postNewUser(new User(request.getUsername(), request.getPassword(), request.getEmail()));
-        }catch(IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
     }
@@ -98,10 +102,11 @@ public class AuthService {
      * revoking all existing valid tokens, and saving the new refresh token.
      * 
      * @return TokenInfo containing the new access token and refresh token cookie
-     * @throws AuthenticationException if the authenticated user cannot be found in the database
+     * @throws AuthenticationException if the authenticated user cannot be found in
+     *                                 the database
      */
-    public TokenInfo refreshToken() throws AuthenticationException{
-         User user = getAuthenticatedUser();
+    public TokenInfo refreshToken() throws AuthenticationException {
+        User user = getAuthenticatedUser();
 
         var newAccessToken = jwtService.generateToken(user);
         var newRefreshToken = jwtService.generateRefreshToken(user);
@@ -116,17 +121,17 @@ public class AuthService {
      * Logs out the currently authenticated user by revoking all their valid tokens
      * and clearing the security context.
      * 
-     * @throws IllegalStateException if the authenticated user cannot be found
+     * @throws IllegalStateException   if the authenticated user cannot be found
      * @throws AuthenticationException if there is no valid authentication
-     * @throws NullPointerException if required authentication data is null
-     * @throws Exception for any other unexpected errors during logout
+     * @throws NullPointerException    if required authentication data is null
+     * @throws Exception               for any other unexpected errors during logout
      */
     public void logout() throws IllegalStateException, NullPointerException, AuthenticationException, Exception {
         User user = getAuthenticatedUser();
-        
+
         var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getUid());
-            
-        if (validUserTokens.isEmpty()){
+
+        if (validUserTokens.isEmpty()) {
             return;
         }
 
@@ -136,29 +141,29 @@ public class AuthService {
 
         tokenRepository.saveAll(validUserTokens);
 
-        if(SecurityContextHolder.getContext().getAuthentication() != null){
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
             SecurityContextHolder.clearContext();
-        }        
+        }
     }
 
     private void saveUserToken(User user, String jwtToken) {
         var token = Token.builder()
-            .user(user)
-            .token(jwtToken)
-            .revoked(false)
-            .build();
+                .user(user)
+                .token(jwtToken)
+                .revoked(false)
+                .build();
         tokenRepository.save(token);
     }
 
     private void revokeAllUserTokens(User user) {
         var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getUid());
-        
-        if (validUserTokens.isEmpty()){
+
+        if (validUserTokens.isEmpty()) {
             return;
         }
 
         validUserTokens.forEach(token -> {
-          token.setRevoked(true);
+            token.setRevoked(true);
         });
 
         tokenRepository.saveAll(validUserTokens);
@@ -183,45 +188,19 @@ public class AuthService {
         return (User) authentication.getPrincipal();
     }
 
-    public User getAuthenticatedUserFromStompHeader(StompHeaderAccessor headerAccessor){
+    public User getAuthenticatedUserFromStompHeader(StompHeaderAccessor headerAccessor) {
         Principal principal = headerAccessor.getUser();
 
-        if(principal == null){
+        if (principal == null) {
             throw new InsufficientAuthenticationException("principal is null");
         }
 
         // Check if principal is UsernamePasswordAuthenticationToken
-        if(principal instanceof UsernamePasswordAuthenticationToken){
-            UsernamePasswordAuthenticationToken authToken = (UsernamePasswordAuthenticationToken) principal;
-            Object principalObj = authToken.getPrincipal();
-            
-            if(!(principalObj instanceof User)){
-                throw new InsufficientAuthenticationException("Invalid authentication principal type");
-            }
-            
-            return (User) principalObj;
-        }
-
-        // Direct User instance (shouldn't normally happen, but keep as fallback)
-        if(principal instanceof User){
-            return (User) principal;
-        }
-
-        throw new InsufficientAuthenticationException("Invalid authentication principal type");
-    }
-
-    public User getAuthenticatedUserFromStompHeader(Principal principal){
-
-        if(principal == null){
-            throw new InsufficientAuthenticationException("principal is null");
-        }
-
-        // Check if principal is UsernamePasswordAuthenticationToken
-        if(principal instanceof UsernamePasswordAuthenticationToken){
+        if (principal instanceof UsernamePasswordAuthenticationToken) {
             UsernamePasswordAuthenticationToken authToken = (UsernamePasswordAuthenticationToken) principal;
             Object principalObj = authToken.getPrincipal();
 
-            if(!(principalObj instanceof User)){
+            if (!(principalObj instanceof User)) {
                 throw new InsufficientAuthenticationException("Invalid authentication principal type");
             }
 
@@ -229,13 +208,45 @@ public class AuthService {
         }
 
         // Direct User instance (shouldn't normally happen, but keep as fallback)
-        if(principal instanceof User){
+        if (principal instanceof User) {
             return (User) principal;
         }
 
         throw new InsufficientAuthenticationException("Invalid authentication principal type");
     }
 
-    
+    public User getAuthenticatedUserFromStompHeader(Principal principal) {
+
+        if (principal == null) {
+            throw new InsufficientAuthenticationException("principal is null");
+        }
+
+        // Check if principal is UsernamePasswordAuthenticationToken
+        if (principal instanceof UsernamePasswordAuthenticationToken) {
+            UsernamePasswordAuthenticationToken authToken = (UsernamePasswordAuthenticationToken) principal;
+            Object principalObj = authToken.getPrincipal();
+
+            if (!(principalObj instanceof User)) {
+                throw new InsufficientAuthenticationException("Invalid authentication principal type");
+            }
+
+            return (User) principalObj;
+        }
+
+        // Direct User instance (shouldn't normally happen, but keep as fallback)
+        if (principal instanceof User) {
+            return (User) principal;
+        }
+
+        String principalName = principal.getName();
+        if (principalName != null && !principalName.isEmpty()) {
+            return userRepository.findUserByUid(principalName)
+                    .orElseThrow(
+                            () -> new InsufficientAuthenticationException("User not found for uid: " + principalName));
+        }
+
+        throw new InsufficientAuthenticationException(
+                "Invalid authentication principal type: " + principal.getClass().getName());
+    }
 
 }

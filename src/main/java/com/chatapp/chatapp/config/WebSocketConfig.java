@@ -16,36 +16,39 @@ import lombok.RequiredArgsConstructor;
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-    
+
     private final WebSocketAuthInterceptor webSocketAuthInterceptor;
-    
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .setAllowedOrigins(
-                            "http://localhost:5173",
-                            "http://127.0.0.1:5173",
-                            "http://frontend:5173",
-                            "http://0.0.0.0:5173",
-                            "http://host.docker.internal:5173",
-                            "http://localhost",
-                            "http://127.0.0.1",
-                            "http://localhost:80",
-                            "http://127.0.0.1:80" 
-                )
-               .withSockJS()
-               .setInterceptors(new WebSocketHandshakeInterceptor());
+                        "http://localhost:5173",
+                        "http://127.0.0.1:5173",
+                        "http://frontend:5173",
+                        "http://0.0.0.0:5173",
+                        "http://host.docker.internal:5173",
+                        "http://localhost",
+                        "http://127.0.0.1",
+                        "http://localhost:80",
+                        "http://127.0.0.1:80")
+                .withSockJS()
+                .setInterceptors(new WebSocketHandshakeInterceptor());
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.setApplicationDestinationPrefixes("/app");
-        // Enable multiple topic destinations for different chatviews
+        // Enable simple broker
+        // /topic - for broadcast messages
+        // /queue - for point-to-point messages (used with /user prefix)
         registry.enableSimpleBroker("/topic", "/queue");
         // Set user destination prefix for user-specific messages
+        // Messages sent to /user/queue/... are automatically routed to the
+        // authenticated user
         registry.setUserDestinationPrefix("/user");
     }
-    
+
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(webSocketAuthInterceptor);

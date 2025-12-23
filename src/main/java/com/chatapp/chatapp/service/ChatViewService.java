@@ -30,6 +30,7 @@ public class ChatViewService {
     private final UserRepository userRepository;
     private final RabbitMQService rabbitMQService;
     private final AuthService authService;
+    private final NotificationService notificationService;
 
     /**
      * Creates a new chatview
@@ -84,6 +85,8 @@ public class ChatViewService {
         
         // Create RabbitMQ queue for new user
         rabbitMQService.createUserQueueForChatView(chatViewId, userUid);
+        
+        notificationService.notifyUserAddedToChatView(userUid, chatViewId);
     }
     
     /**
