@@ -23,9 +23,9 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ChatViewService {
-    
+
     private static final Logger log = LoggerFactory.getLogger(ChatViewService.class);
-    
+
     private final ChatViewRepository chatViewRepository;
     private final UserRepository userRepository;
     private final RabbitMQService rabbitMQService;
@@ -38,77 +38,75 @@ public class ChatViewService {
     @Transactional
     public ChatViewResponse createChatView(ChatViewRequest request) {
         ChatView chatView = new ChatView(request.getName());
+        chatView = chatViewRepository.save(chatView);
         User creator = authService.getAuthenticatedUser();
 
-        // Add creator first
-        chatView.addUser(creator);
-        chatView = chatViewRepository.save(chatView);
-        rabbitMQService.createUserQueueForChatView(chatView.getId(), creator.getUid());
-        
-        // Add other users
-        for(String userUid : request.getUserUids()){
+        addUserToChatView(chatView.getId(), creator.getUid());
+
+        for (String userUid : request.getUserUids()) {
             if (userUid.equals(creator.getUid())) {
-                continue; // Skip if already added as creator
+                continue;
             }
-            try{
+            try {
                 addUserToChatView(chatView.getId(), userUid);
-            } catch(Exception e){
+            } catch (Exception e) {
                 log.warn("Failed to add user {} to chatview: {}", userUid, e.getMessage());
             }
         }
-        
+
         log.info("Created chatview {}", chatView.getId());
-        
+
         return mapToChatViewResponse(chatView);
     }
-    
+
     /**
      * Adds a user to a chatview
      */
     @Transactional
-    public void addUserToChatView(String chatViewId, String userUid) throws AccessDeniedException, IllegalStateException {
-        User authenticatedUser =  authService.getAuthenticatedUser();
+    public void addUserToChatView(String chatViewId, String userUid)
+            throws AccessDeniedException, IllegalStateException {
+        User authenticatedUser = authService.getAuthenticatedUser();
 
         // Check if current user is a member of the chatview
         if (!isUserInChatView(chatViewId, authenticatedUser.getUid())) {
             throw new AccessDeniedException("user is not member of chatview " + chatViewId);
         }
-        
+
         ChatView chatView = chatViewRepository.findByIdWithUsers(chatViewId)
-            .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));
-        
+                .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));
+
         User user = userRepository.findUserByUid(userUid)
-            .orElseThrow(() -> new IllegalStateException("User not found: " + userUid));
-        
+                .orElseThrow(() -> new IllegalStateException("User not found: " + userUid));
+
         chatView.addUser(user);
         chatViewRepository.save(chatView);
-        
+
         // Create RabbitMQ queue for new user
         rabbitMQService.createUserQueueForChatView(chatViewId, userUid);
-        
+
         notificationService.notifyUserAddedToChatView(userUid, chatViewId);
     }
-    
+
     /**
      * Removes a user from a chatview
      */
     @Transactional
     public void removeUserFromChatView(String chatViewId, String userUid) {
         ChatView chatView = chatViewRepository.findByIdWithUsers(chatViewId)
-            .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));
-        
+                .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));
+
         User user = userRepository.findUserByUid(userUid)
-            .orElseThrow(() -> new IllegalStateException("User not found: " + userUid));
-        
+                .orElseThrow(() -> new IllegalStateException("User not found: " + userUid));
+
         chatView.removeUser(user);
         chatViewRepository.save(chatView);
-        
+
         // Delete RabbitMQ queue for user
         rabbitMQService.deleteUserQueueForChatView(chatViewId, userUid);
-        
+
         log.info("Removed user {} from chatview {}", userUid, chatViewId);
     }
-    
+
     /**
      * Gets all chatviews for a user
      */
@@ -116,53 +114,51 @@ public class ChatViewService {
     public List<ChatViewResponse> getChatViewsForUser(String userUid) {
         List<ChatView> chatViews = chatViewRepository.findChatViewsByUserUid(userUid);
         return chatViews.stream()
-            .map(this::mapToChatViewResponse)
-            .collect(Collectors.toList());
+                .map(this::mapToChatViewResponse)
+                .collect(Collectors.toList());
     }
-    
+
     /**
      * Gets a specific chatview by ID
      */
     @Transactional(readOnly = true)
     public ChatViewResponse getChatViewById(String chatViewId) {
         ChatView chatView = chatViewRepository.findByIdWithUsers(chatViewId)
-            .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));
+                .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));
         return mapToChatViewResponse(chatView);
     }
-    
+
     /**
      * Checks if a user is a member of a chatview
      */
     public boolean isUserInChatView(String chatViewId, String userUid) {
         ChatView chatView = chatViewRepository.findByIdWithUsers(chatViewId)
-            .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));
+                .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));
         return chatView.getUsers().stream()
-            .anyMatch(user -> user.getUid().equals(userUid));
+                .anyMatch(user -> user.getUid().equals(userUid));
     }
-    
+
     /**
      * Gets all user UIDs in a specific chatview
      */
     public Set<String> getUserUidsInChatView(String chatViewId) {
         ChatView chatView = chatViewRepository.findByIdWithUsers(chatViewId)
-            .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));
+                .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));
         return chatView.getUsers().stream()
-            .map(User::getUid)
-            .collect(Collectors.toSet());
+                .map(User::getUid)
+                .collect(Collectors.toSet());
     }
-    
+
     private ChatViewResponse mapToChatViewResponse(ChatView chatView) {
         Map<String, String> userAvatars = chatView.getUsers().stream()
-            .collect(Collectors.toMap(
-                User::getUid,
-                user -> user.getAvatarLink() != null ? user.getAvatarLink() : ""
-            ));
-        
+                .collect(Collectors.toMap(
+                        User::getUid,
+                        user -> user.getAvatarLink() != null ? user.getAvatarLink() : ""));
+
         return new ChatViewResponse(
-            chatView.getId(),
-            chatView.getName(),
-            userAvatars,
-            chatView.getMessages().size()
-        );
+                chatView.getId(),
+                chatView.getName(),
+                userAvatars,
+                chatView.getMessages().size());
     }
 }
