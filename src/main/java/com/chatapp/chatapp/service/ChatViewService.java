@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import com.chatapp.chatapp.dto.ChatViewRequest;
 import com.chatapp.chatapp.dto.ChatViewResponse;
 import com.chatapp.chatapp.entity.ChatView;
 import com.chatapp.chatapp.entity.User;
+import com.chatapp.chatapp.event.UserAddedToChatViewEvent;
 import com.chatapp.chatapp.repository.ChatViewRepository;
 import com.chatapp.chatapp.repository.UserRepository;
 
@@ -30,7 +32,7 @@ public class ChatViewService {
     private final UserRepository userRepository;
     private final RabbitMQService rabbitMQService;
     private final AuthService authService;
-    private final NotificationService notificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * Creates a new chatview
@@ -38,17 +40,23 @@ public class ChatViewService {
     @Transactional
     public ChatViewResponse createChatView(ChatViewRequest request) {
         ChatView chatView = new ChatView(request.getName());
-        chatView = chatViewRepository.save(chatView);
         User creator = authService.getAuthenticatedUser();
 
-        addUserToChatView(chatView.getId(), creator.getUid());
+        // Add creator first
+        chatView.addUser(creator);
+        chatView = chatViewRepository.save(chatView);
+        rabbitMQService.createUserQueueForChatView(chatView.getId(), creator.getUid());
 
+        // Publish event instead of direct notification
+        eventPublisher.publishEvent(new UserAddedToChatViewEvent(creator.getUid(), chatView.getId()));
+
+        // Add other users
         for (String userUid : request.getUserUids()) {
             if (userUid.equals(creator.getUid())) {
-                continue;
+                continue; // Skip if already added as creator
             }
             try {
-                addUserToChatView(chatView.getId(), userUid);
+                addUserToChatViewInternal(chatView.getId(), userUid);
             } catch (Exception e) {
                 log.warn("Failed to add user {} to chatview: {}", userUid, e.getMessage());
             }
@@ -60,7 +68,7 @@ public class ChatViewService {
     }
 
     /**
-     * Adds a user to a chatview
+     * Adds a user to a chatview (with authorization check)
      */
     @Transactional
     public void addUserToChatView(String chatViewId, String userUid)
@@ -68,10 +76,23 @@ public class ChatViewService {
         User authenticatedUser = authService.getAuthenticatedUser();
 
         // Check if current user is a member of the chatview
-        if (!isUserInChatView(chatViewId, authenticatedUser.getUid())) {
-            throw new AccessDeniedException("user is not member of chatview " + chatViewId);
+        try {
+            if (!isUserInChatView(chatViewId, authenticatedUser.getUid())) {
+                throw new AccessDeniedException("user is not member of chatview " + chatViewId);
+            }
+        } catch (IllegalStateException e) {
+            log.warn("Could not verify user membership for chatview {}: {}", chatViewId, e.getMessage());
+            throw new AccessDeniedException("Cannot verify membership in chatview " + chatViewId);
         }
 
+        addUserToChatViewInternal(chatViewId, userUid);
+    }
+
+    /**
+     * Internal method to add user without authorization check
+     */
+    @Transactional
+    private void addUserToChatViewInternal(String chatViewId, String userUid) {
         ChatView chatView = chatViewRepository.findByIdWithUsers(chatViewId)
                 .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));
 
@@ -81,10 +102,10 @@ public class ChatViewService {
         chatView.addUser(user);
         chatViewRepository.save(chatView);
 
-        // Create RabbitMQ queue for new user
         rabbitMQService.createUserQueueForChatView(chatViewId, userUid);
 
-        notificationService.notifyUserAddedToChatView(userUid, chatViewId);
+        // Publish event instead of direct notification
+        eventPublisher.publishEvent(new UserAddedToChatViewEvent(userUid, chatView.getId()));
     }
 
     /**
