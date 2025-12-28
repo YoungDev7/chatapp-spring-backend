@@ -38,7 +38,7 @@ public class ChatViewService {
      * Creates a new chatview
      */
     @Transactional
-    public ChatViewResponse createChatView(ChatViewRequest request) {
+    public void createChatView(ChatViewRequest request) {
         ChatView chatView = new ChatView(request.getName());
         User creator = authUtilService.getAuthenticatedUser();
 
@@ -63,8 +63,6 @@ public class ChatViewService {
         }
 
         log.info("Created chatview {}", chatView.getId());
-
-        return mapToChatViewResponse(chatView);
     }
 
     /**
