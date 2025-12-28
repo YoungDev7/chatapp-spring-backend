@@ -31,8 +31,8 @@ public class ChatViewService {
     private final ChatViewRepository chatViewRepository;
     private final UserRepository userRepository;
     private final RabbitMQService rabbitMQService;
-    private final AuthService authService;
     private final ApplicationEventPublisher eventPublisher;
+    private final AuthUtilService authUtilService;
 
     /**
      * Creates a new chatview
@@ -40,7 +40,7 @@ public class ChatViewService {
     @Transactional
     public ChatViewResponse createChatView(ChatViewRequest request) {
         ChatView chatView = new ChatView(request.getName());
-        User creator = authService.getAuthenticatedUser();
+        User creator = authUtilService.getAuthenticatedUser();
 
         // Add creator first
         chatView.addUser(creator);
@@ -56,7 +56,7 @@ public class ChatViewService {
                 continue; // Skip if already added as creator
             }
             try {
-                addUserToChatViewInternal(chatView.getId(), userUid);
+                addUserToChatViewNoValidation(chatView.getId(), userUid);
             } catch (Exception e) {
                 log.warn("Failed to add user {} to chatview: {}", userUid, e.getMessage());
             }
@@ -73,7 +73,7 @@ public class ChatViewService {
     @Transactional
     public void addUserToChatView(String chatViewId, String userUid)
             throws AccessDeniedException, IllegalStateException {
-        User authenticatedUser = authService.getAuthenticatedUser();
+        User authenticatedUser = authUtilService.getAuthenticatedUser();
 
         // Check if current user is a member of the chatview
         try {
@@ -85,27 +85,33 @@ public class ChatViewService {
             throw new AccessDeniedException("Cannot verify membership in chatview " + chatViewId);
         }
 
-        addUserToChatViewInternal(chatViewId, userUid);
+        addUserToChatViewNoValidation(chatViewId, userUid);
     }
 
     /**
-     * Internal method to add user without authorization check
+     * add user without authorization check
      */
     @Transactional
-    private void addUserToChatViewInternal(String chatViewId, String userUid) {
-        ChatView chatView = chatViewRepository.findByIdWithUsers(chatViewId)
-                .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));
+    public void addUserToChatViewNoValidation(String chatViewId, String userUid) {
+        try {
+            ChatView chatView = chatViewRepository.findByIdWithUsers(chatViewId)
+                    .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));
 
-        User user = userRepository.findUserByUid(userUid)
-                .orElseThrow(() -> new IllegalStateException("User not found: " + userUid));
+            User user = userRepository.findUserByUid(userUid)
+                    .orElseThrow(() -> new IllegalStateException("User not found: " + userUid));
 
-        chatView.addUser(user);
-        chatViewRepository.save(chatView);
+            chatView.addUser(user);
+            chatViewRepository.save(chatView);
 
-        rabbitMQService.createUserQueueForChatView(chatViewId, userUid);
+            rabbitMQService.createUserQueueForChatView(chatViewId, userUid);
 
-        // Publish event instead of direct notification
-        eventPublisher.publishEvent(new UserAddedToChatViewEvent(userUid, chatView.getId()));
+            log.debug("WE GOT HERE " + chatView.getId() + " " + user.getUid());
+
+            // Publish event instead of direct notification
+            eventPublisher.publishEvent(new UserAddedToChatViewEvent(userUid, chatView.getId()));
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+        }
     }
 
     /**

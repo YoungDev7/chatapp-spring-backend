@@ -19,7 +19,6 @@ import com.chatapp.chatapp.entity.Message;
 import com.chatapp.chatapp.entity.User;
 import com.chatapp.chatapp.repository.ChatViewRepository;
 import com.chatapp.chatapp.repository.MessageRepository;
-import com.chatapp.chatapp.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,13 +29,12 @@ public class MessageService {
     private static final Logger log = LoggerFactory.getLogger(MessageService.class);
 
     private final MessageRepository messageRepository;
-    private final UserRepository userRepository;
     private final ChatViewRepository chatViewRepository;
     private final RabbitMQService rabbitMQService;
-    private final AuthService authService;
     private final ChatViewService chatViewService;
     private final SimpMessagingTemplate messagingTemplate;
     private final UserSessionService userSessionService;
+    private final AuthUtilService authUtilService;
 
     /**
      * Posts a new message to a chatview
@@ -46,7 +44,7 @@ public class MessageService {
     @Transactional
     public void postMessageToChatView(String text, String chatViewId, ZonedDateTime createdAt, Principal principal) {
 
-        User sender = authService.getAuthenticatedUserFromStompHeader(principal);
+        User sender = authUtilService.getAuthenticatedUserFromStompHeader(principal);
 
         ChatView chatView = chatViewRepository.findByIdWithUsers(chatViewId)
                 .orElseThrow(() -> new IllegalStateException("ChatView not found: " + chatViewId));

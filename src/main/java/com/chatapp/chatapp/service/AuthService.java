@@ -1,18 +1,16 @@
 package com.chatapp.chatapp.service;
 
-import java.security.Principal;
 import java.util.Optional;
 
 import org.apache.commons.validator.routines.EmailValidator;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.chatapp.chatapp.dto.AuthRequest;
 import com.chatapp.chatapp.dto.RegisterRequest;
@@ -33,6 +31,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
+    private final AuthUtilService authUtilService;
 
     /**
      * Authenticates a user with the provided credentials and generates JWT tokens.
@@ -69,6 +68,7 @@ public class AuthService {
      *                                  email format is invalid, or
      *                                  username/password is blank
      */
+    @Transactional
     public void register(RegisterRequest request) throws IllegalArgumentException {
         Optional<User> userOptionalEmail = userRepository.findUserByEmail(request.getEmail());
         Optional<User> userOptionalUsername = userRepository.findUserByNameIgnoreCase(request.getUsername());
@@ -106,7 +106,7 @@ public class AuthService {
      *                                 the database
      */
     public TokenInfo refreshToken() throws AuthenticationException {
-        User user = getAuthenticatedUser();
+        User user = authUtilService.getAuthenticatedUser();
 
         var newAccessToken = jwtService.generateToken(user);
         var newRefreshToken = jwtService.generateRefreshToken(user);
@@ -127,7 +127,7 @@ public class AuthService {
      * @throws Exception               for any other unexpected errors during logout
      */
     public void logout() throws IllegalStateException, NullPointerException, AuthenticationException, Exception {
-        User user = getAuthenticatedUser();
+        User user = authUtilService.getAuthenticatedUser();
 
         var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getUid());
 
@@ -172,81 +172,6 @@ public class AuthService {
     private boolean isValidEmail(String email) {
         EmailValidator validator = EmailValidator.getInstance();
         return validator.isValid(email);
-    }
-
-    public User getAuthenticatedUser() throws AuthenticationException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null) {
-            throw new InsufficientAuthenticationException("No authentication found");
-        }
-
-        if (!(authentication.getPrincipal() instanceof User)) {
-            throw new InsufficientAuthenticationException("Invalid authentication principal type");
-        }
-
-        return (User) authentication.getPrincipal();
-    }
-
-    public User getAuthenticatedUserFromStompHeader(StompHeaderAccessor headerAccessor) {
-        Principal principal = headerAccessor.getUser();
-
-        if (principal == null) {
-            throw new InsufficientAuthenticationException("principal is null");
-        }
-
-        // Check if principal is UsernamePasswordAuthenticationToken
-        if (principal instanceof UsernamePasswordAuthenticationToken) {
-            UsernamePasswordAuthenticationToken authToken = (UsernamePasswordAuthenticationToken) principal;
-            Object principalObj = authToken.getPrincipal();
-
-            if (!(principalObj instanceof User)) {
-                throw new InsufficientAuthenticationException("Invalid authentication principal type");
-            }
-
-            return (User) principalObj;
-        }
-
-        // Direct User instance (shouldn't normally happen, but keep as fallback)
-        if (principal instanceof User) {
-            return (User) principal;
-        }
-
-        throw new InsufficientAuthenticationException("Invalid authentication principal type");
-    }
-
-    public User getAuthenticatedUserFromStompHeader(Principal principal) {
-
-        if (principal == null) {
-            throw new InsufficientAuthenticationException("principal is null");
-        }
-
-        // Check if principal is UsernamePasswordAuthenticationToken
-        if (principal instanceof UsernamePasswordAuthenticationToken) {
-            UsernamePasswordAuthenticationToken authToken = (UsernamePasswordAuthenticationToken) principal;
-            Object principalObj = authToken.getPrincipal();
-
-            if (!(principalObj instanceof User)) {
-                throw new InsufficientAuthenticationException("Invalid authentication principal type");
-            }
-
-            return (User) principalObj;
-        }
-
-        // Direct User instance (shouldn't normally happen, but keep as fallback)
-        if (principal instanceof User) {
-            return (User) principal;
-        }
-
-        String principalName = principal.getName();
-        if (principalName != null && !principalName.isEmpty()) {
-            return userRepository.findUserByUid(principalName)
-                    .orElseThrow(
-                            () -> new InsufficientAuthenticationException("User not found for uid: " + principalName));
-        }
-
-        throw new InsufficientAuthenticationException(
-                "Invalid authentication principal type: " + principal.getClass().getName());
     }
 
 }
