@@ -56,7 +56,8 @@ public class MessageService {
             throw new AccessDeniedException("User not authorized for chatview: " + chatViewId);
         }
 
-        Message message = new Message(text, sender, chatView, createdAt);
+        ZonedDateTime utcCreatedAt = createdAt.withZoneSameInstant(java.time.ZoneOffset.UTC);
+        Message message = new Message(text, sender, chatView, utcCreatedAt);
         message = messageRepository.save(message);
 
         MessageResponse response = new MessageResponse(
