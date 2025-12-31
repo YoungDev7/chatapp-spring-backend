@@ -25,30 +25,26 @@ import lombok.ToString;
 @NoArgsConstructor
 @Table(name = "chatview")
 public class ChatView {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id")
+    @Column(name = "id", length = 36)
     private String id;
-    
+
     @Column(name = "name", nullable = false)
     private String name;
-    
+
     @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "chatview_users",
-        joinColumns = @JoinColumn(name = "chatview_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_uid")
-    )
+    @JoinTable(name = "chatview_users", joinColumns = @JoinColumn(name = "chatview_id"), inverseJoinColumns = @JoinColumn(name = "user_uid"))
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Set<User> users = new HashSet<>();
-    
+
     @OneToMany(mappedBy = "chatView", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Set<Message> messages = new HashSet<>();
-    
+
     public ChatView(String name) {
         this.name = name;
     }
@@ -57,11 +53,11 @@ public class ChatView {
         this.id = id;
         this.name = name;
     }
-    
+
     public void addUser(User user) {
         this.users.add(user);
     }
-    
+
     public void removeUser(User user) {
         this.users.remove(user);
     }
