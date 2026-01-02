@@ -18,67 +18,101 @@ A RESTful API backend for a real-time chat application built with Spring Boot. F
 
 ## 📋 Features
 
-- JWT-based authentication with refresh tokens
-- Real-time messaging via WebSocket/STOMP
-- User registration and login
-- Secure password hashing with BCrypt
-- Database migrations with Flyway
-- Comprehensive request logging
-- CORS configuration
-- Unit and integration testing
-- Docker containerization
+- **JWT-based authentication** with refresh tokens and token rotation
+- **Real-time messaging** via WebSocket/STOMP protocol
+- **User registration and login** with secure password hashing (BCrypt)
+- **Chat view management** - Create and manage group conversations
+- **User presence tracking** - Online/offline status with session management
+- **Message persistence** - All messages stored in MySQL database
+- **Hybrid message delivery** - WebSocket for online users, RabbitMQ queue for offline users
+- **Avatar management** - User profile picture support
+- **Comprehensive request logging** with MDC (Mapped Diagnostic Context)
+- **CORS configuration** for seamless frontend integration
+- **Database migrations** with Flyway for version control
+- **Unit and integration testing** with H2 in-memory database
+- **Docker containerization** for development and production environments
+- **Notification system** for chat view events
+- **Security filters chain** for authentication and authorization
 
 ## 🏗️ Project Structure
 
 ```
 src/main/java/com/chatapp/chatapp/
 ├── auth/
-│   ├── JwtAuthenticationFilter.java         # JWT filter for requests
-│   ├── WebSocketAuthInterceptor.java        # Websocket authentication
-│   └── WebSocketHandshakeInterceptor.java   # Websocket handshake
+│   ├── WebSocketAuthInterceptor.java        # WebSocket STOMP message authentication
+│   └── WebSocketHandshakeInterceptor.java   # WebSocket handshake validation
 ├── config/
-│   ├── Config.java               # General configuration & beans
-│   ├── CorsConfig.java           # CORS configuration
-│   ├── SecurityConfig.java       # Security configuration
-│   └── WebSocketConfig.java      # WebSocket configuration
+│   ├── Config.java               # General configuration & beans (BCrypt, UserDetailsService)
+│   ├── CorsConfig.java           # CORS configuration for frontend integration
+│   ├── DataInitializer.java      # Application startup data initialization
+│   ├── RabbitMQConfig.java       # RabbitMQ message broker configuration
+│   ├── SecurityConfig.java       # Spring Security & JWT authentication
+│   └── WebSocketConfig.java      # WebSocket/STOMP messaging configuration
 ├── controller/
-│   ├── AuthController.java       # Authentication endpoints
-│   └── MessageController.java    # Message endpoints & WebSocket
-├── DTO/
+│   ├── AuthController.java       # Authentication endpoints (login, register, refresh, logout)
+│   ├── ChatViewController.java   # Chat view & messaging endpoints (REST + WebSocket)
+│   └── UserController.java       # User management endpoints (avatar, search)
+├── dto/
 │   ├── AuthRequest.java          # Login request DTO
-│   ├── AuthResponse.java         # Login response DTO
+│   ├── AuthResponse.java         # Login response DTO with access token
 │   ├── RegisterRequest.java      # Registration request DTO
-│   ├── MessageRequest.java       # Message request DTO
-│   ├── TokenInfo.java            # Token transfer DTO
-│   └── JwtValidationResult.java  # JWT validation result DTO
+│   ├── MessageRequest.java       # Message creation request DTO
+│   ├── MessageResponse.java      # Message response DTO (Serializable for RabbitMQ)
+│   ├── ChatViewRequest.java      # Chat view creation request DTO
+│   ├── ChatViewResponse.java     # Chat view response with user avatars
+│   ├── UserResponse.java         # User information response DTO
+│   ├── AvatarRequest.java        # Avatar update request DTO
+│   ├── AvatarResponse.java       # Avatar response DTO
+│   ├── NotificationDTO.java      # System notification DTO
+│   ├── TokenInfo.java            # Token transfer DTO (access + refresh cookie)
+│   └── JwtValidationResult.java  # JWT validation result with status details
 ├── entity/
-│   ├── User.java                # User entity
-│   ├── Message.java             # Message entity
-│   └── Token.java               # Token entity
+│   ├── User.java                # User entity (implements UserDetails)
+│   ├── UserSession.java         # User session & online status tracking
+│   ├── Message.java             # Message entity with timestamp
+│   ├── ChatView.java            # Chat view/room entity with user relationships
+│   └── Token.java               # JWT refresh token storage
+├── event/
+│   ├── UserCreatedEvent.java           # Event fired when user is created
+│   └── UserAddedToChatViewEvent.java   # Event fired when user joins chat
 ├── filter/
-│   ├── LoggingFilter.java       # Request logging filter
-│   └── UserContextFilter.java   # User context setup filter
+│   ├── JwtAuthenticationFilter.java    # JWT authentication filter (Order=2)
+│   ├── LoggingFilter.java              # Request logging filter (Order=1)
+│   └── UserContextFilter.java          # User context MDC enrichment (Order=3)
+├── listener/
+│   ├── ChatViewEventListener.java      # Async chat view event processing
+│   └── WebSocketEventListener.java     # WebSocket lifecycle event handling
 ├── repository/
-│   ├── UserRepository.java     # User data access
-│   ├── MessageRepository.java  # Message data access
-│   └── TokenRepository.java     # Token data access
+│   ├── UserRepository.java        # User data access with custom queries
+│   ├── MessageRepository.java     # Message data access with chat view queries
+│   ├── TokenRepository.java       # Token data access with validation queries
+│   ├── ChatViewRepository.java    # Chat view data access with user membership queries
+│   └── UserSessionRepository.java # User session data access
 ├── service/
-│   ├── AuthService.java         # Authentication services
-│   ├── JwtService.java          # JWT token services
-│   ├── MessageService.java      # Message services
-│   └── UserService.java         # User services
+│   ├── AuthService.java           # Authentication & authorization operations
+│   ├── JwtService.java            # JWT token generation, validation, parsing
+│   ├── MessageService.java        # Message creation & hybrid delivery (WebSocket + RabbitMQ)
+│   ├── ChatViewService.java       # Chat view/room management with authorization
+│   ├── UserService.java           # User account & profile operations
+│   ├── UserSessionService.java    # User presence & session tracking
+│   ├── RabbitMQService.java       # RabbitMQ queue & message management
+│   ├── NotificationService.java   # WebSocket notification delivery
+│   ├── AuthUtilService.java       # Authentication utility operations
+│   └── TestDataService.java       # Test data initialization (dev profile only)
 ├── util/
-│   └── LoggerUtil.java          # MDC logging utility
-└── ChatappApplication.java      # Main application class
+│   └── LoggerUtil.java            # MDC logging context management
+└── ChatappApplication.java        # Main application class
 
 src/main/resources/
 ├── application.properties        # Main configuration
 ├── application-docker.properties # Docker environment config
 ├── application-dev.properties    # Local  environment config
 ├── db/migration/                 # Flyway database migrations
-│   ├── V1__Create_user_table.sql
-│   ├── V2__Create_message_table.sql
-│   └── V3__Create_token_table.sql
+│   ├── V1__create_user_table.sql
+│   ├── V2__create_user_session_table.sql
+│   ├── V3__create_token_table.sql
+│   ├── V4__create_chatview_table.sql
+│   └── V5__create_message_table.sql
 
 src/test/java/com/chatapp/chatapp/
 ├── AuthControllerTest.java       # Authentication endpoint tests
@@ -236,7 +270,35 @@ CREATE TABLE user (
     uid VARCHAR(36) PRIMARY KEY,
     name VARCHAR(255) UNIQUE,
     password VARCHAR(255),
-    email VARCHAR(255) UNIQUE
+    email VARCHAR(255) UNIQUE,
+    avatar_link VARCHAR(255)
+);
+```
+
+### User Sessions Table
+```sql
+CREATE TABLE user_session (
+    user_uid VARCHAR(36) PRIMARY KEY,
+    is_online BOOLEAN NOT NULL,
+    websocket_session_id VARCHAR(255),
+    last_seen DATETIME,
+    FOREIGN KEY (user_uid) REFERENCES user(uid)
+);
+```
+
+### Chat Views Table
+```sql
+CREATE TABLE chatview (
+    id VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE chatview_users (
+    chatview_id VARCHAR(36),
+    user_uid VARCHAR(36),
+    PRIMARY KEY (chatview_id, user_uid),
+    FOREIGN KEY (chatview_id) REFERENCES chatview(id),
+    FOREIGN KEY (user_uid) REFERENCES user(uid)
 );
 ```
 
@@ -244,9 +306,12 @@ CREATE TABLE user (
 ```sql
 CREATE TABLE message (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    text TEXT,
+    text TEXT NOT NULL,
     user_uid VARCHAR(36),
-    FOREIGN KEY (user_uid) REFERENCES user(uid)
+    chatview_id VARCHAR(36) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    FOREIGN KEY (user_uid) REFERENCES user(uid),
+    FOREIGN KEY (chatview_id) REFERENCES chatview(id)
 );
 ```
 
@@ -255,7 +320,6 @@ CREATE TABLE message (
 CREATE TABLE token (
     id INT AUTO_INCREMENT PRIMARY KEY,
     token VARCHAR(512),
-    expired BOOLEAN,
     revoked BOOLEAN,
     user_uid VARCHAR(36),
     FOREIGN KEY (user_uid) REFERENCES user(uid)
@@ -287,33 +351,72 @@ CREATE TABLE token (
 
 ## 📡 API Endpoints
 
-### Authentication
+### Authentication (`/api/v1/auth`)
 - `POST /api/v1/auth/authenticate` - User login with email and password
 - `POST /api/v1/auth/register` - User registration
-- `POST /api/v1/auth/refresh` - Refresh access token using refresh token
+- `POST /api/v1/auth/refresh` - Refresh access token using refresh token cookie
 - `GET /api/v1/auth/validateToken` - Validate current access token
 - `POST /api/v1/auth/logout` - User logout (revokes all tokens)
 
-### Messages
-- `GET /api/v1/messages` - Get all messages
-- WebSocket endpoint: `/app/chat` - Send message
-- WebSocket topic: `/topic/messages` - Receive messages
+### Chat Views (`/api/v1/chatviews`)
+- `POST /api/v1/chatviews` - Create a new chat view/room
+- `GET /api/v1/chatviews` - Get all chat views for the authenticated user
+- `GET /api/v1/chatviews/{chatViewId}` - Get specific chat view details
+- `GET /api/v1/chatviews/{chatViewId}/messages` - Get all messages and purge offline queue
+- `GET /api/v1/chatviews/{chatViewId}/messages/queue` - Get and remove queued messages
+- `POST /api/v1/chatviews/{chatViewId}/users/{userUid}` - Add user to chat view
+- `DELETE /api/v1/chatviews/{chatViewId}/users/{userUid}` - Remove user from chat view
+- WebSocket: `/app/chatview/{chatViewId}` - Send message to chat view
+
+### Users (`/api/v1/user`)
+- `GET /api/v1/user/avatar` - Get user's avatar URL
+- `PATCH /api/v1/user/avatar` - Update user's avatar URL
+- `GET /api/v1/user/search?username={username}` - Search for users by username
+
+### WebSocket Configuration
+- **Connect**: `/ws`
+- **Send Messages**: `/app/chatview/{chatViewId}`
+- **Subscribe to Messages**: `/user/queue/chatview/{chatViewId}`
+- **Subscribe to Notifications**: `/user/queue/notifications`
 
 ## 🔌 WebSocket Configuration
 
-### Endpoints
-- **Connect**: `/ws`
-- **Send Messages**: `/app/chat`
-- **Subscribe**: `/topic/messages`
+### Connection & Message Flow
+1. **Client connects** to `/ws` endpoint with JWT token as query parameter
+2. **Handshake validation** verifies token via `WebSocketHandshakeInterceptor`
+3. **STOMP authentication** validates each message via `WebSocketAuthInterceptor`
+4. **Client sends message** to `/app/chatview/{chatViewId}`
+5. **Server processes** via `ChatViewController.handleChatViewMessage()`
+6. **Online users** receive message immediately via WebSocket subscription
+7. **Offline users** get messages queued in RabbitMQ for later delivery
+8. **Client subscribes** to:
+   - `/user/queue/chatview/{chatViewId}` - Chat messages
+   - `/user/queue/notifications` - System notifications
 
-### Message Flow
-1. Client connects to WebSocket endpoint
-2. Client sends message to `/app/chat`
-3. Server processes via [`MessageController`](src/main/java/com/chatapp/chatapp/controller/MessageController.java)
-4. Server broadcasts to `/topic/messages`
-5. All connected clients receive the message
+### WebSocket Endpoints
+- **Connect**: `/ws?token=<JWT_ACCESS_TOKEN>`
+- **Send Messages**: `/app/chatview/{chatViewId}`
+- **Subscribe to Messages**: `/user/queue/chatview/{chatViewId}`
+- **Subscribe to Notifications**: `/user/queue/notifications`
+
+
 
 ## ⚙️ Configuration
+
+### Hybrid Message Delivery Architecture
+The application implements a sophisticated hybrid message delivery system:
+
+#### For Online Users:
+1. Message is saved to MySQL database
+2. Delivered immediately via WebSocket to user's active session
+3. User receives message in real-time
+
+#### For Offline Users:
+1. Message is saved to MySQL database
+2. Message is queued in RabbitMQ with user-specific routing
+3. Queue persists until user comes online
+4. On connection, user retrieves and purges their message queue
+5. Combines queued messages with database messages for complete history
 
 ### Environment Variables
 All configuration is managed through environment variables defined in `.env` and `application-dev.properties`
@@ -444,6 +547,22 @@ LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB=DEBUG
 LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY=DEBUG
 LOGGING_LEVEL_COM_CHATAPP_CHATAPP=DEBUG
 ```
+
+## 📖 Code Documentation
+
+### Javadoc Documentation
+All Java classes, methods, and interfaces in this project are fully documented with comprehensive Javadoc comments.
+
+#### Generating Javadoc:
+```bash
+# Generate Javadoc HTML documentation
+mvn javadoc:javadoc
+
+# View generated documentation
+open target/site/apidocs/index.html
+```
+
+The generated Javadoc provides a complete API reference for all public classes and methods, making it easy for developers to understand and use the codebase.
 
 ## 📚 Documentation
 
