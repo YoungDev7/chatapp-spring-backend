@@ -29,10 +29,11 @@ import lombok.RequiredArgsConstructor;
  * 
  * <p>
  * This interceptor validates JWT tokens during WebSocket CONNECT commands and
- * ensures
- * that the authenticated user is properly set in the Spring Security context
- * for all
- * subsequent WebSocket messages.
+ * ensures that the authenticated user is properly set in the Spring Security
+ * context
+ * for all subsequent WebSocket messages. It works in conjunction with
+ * {@link WebSocketHandshakeInterceptor} to provide comprehensive WebSocket
+ * security.
  * </p>
  * 
  * <p>
@@ -42,13 +43,30 @@ import lombok.RequiredArgsConstructor;
  * <li>Intercepts STOMP CONNECT commands to validate JWT tokens</li>
  * <li>Extracts JWT tokens from multiple sources (Authorization header, query
  * parameters, session attributes)</li>
- * <li>Validates tokens using JwtService and loads user details</li>
+ * <li>Validates tokens using {@link JwtService} and loads user details</li>
  * <li>Sets up Spring Security authentication for the WebSocket session</li>
  * <li>Maintains authentication context for non-CONNECT messages</li>
+ * <li>Sets the user principal to the user's UID for proper {@code /user}
+ * destination routing</li>
  * </ul>
+ * 
+ * <p>
+ * Authentication Flow:
+ * </p>
+ * <ol>
+ * <li>Client initiates WebSocket handshake with JWT token in query
+ * parameters</li>
+ * <li>{@link WebSocketHandshakeInterceptor} validates and stores the token</li>
+ * <li>Client sends STOMP CONNECT frame</li>
+ * <li>This interceptor extracts and validates the JWT token</li>
+ * <li>User principal is set to the user's UID for Spring WebSocket routing</li>
+ * <li>Authentication is stored in session attributes for subsequent frames</li>
+ * </ol>
  * 
  * @see WebSocketHandshakeInterceptor
  * @see WebSocketConfig
+ * @see JwtService
+ * @see ChannelInterceptor
  */
 @Component
 @RequiredArgsConstructor
@@ -60,6 +78,31 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
+    /**
+     * Intercepts outbound messages to validate authentication for STOMP CONNECT
+     * commands.
+     * 
+     * <p>
+     * For CONNECT commands, this method extracts and validates the JWT token, loads
+     * user details, and sets up the Spring Security context. For non-CONNECT
+     * commands,
+     * it ensures the security context is maintained from the session attributes.
+     * </p>
+     * 
+     * <p>
+     * Token Extraction Priority:
+     * </p>
+     * <ol>
+     * <li>Authorization header from STOMP native headers</li>
+     * <li>Query parameters (for SockJS compatibility)</li>
+     * <li>Session attributes (stored during handshake)</li>
+     * </ol>
+     * 
+     * @param message the STOMP message being sent
+     * @param channel the message channel
+     * @return the message if authentication succeeds, {@code null} to reject the
+     *         connection
+     */
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
@@ -108,7 +151,6 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
         try {
             UserDetails userDetails = userDetailsService.loadUserByUsername(validationResult.getUsername());
 
-            // Cast to your User entity to get the uid
             User user = (User) userDetails;
 
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -118,10 +160,8 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // Store authentication in session attributes for later use
             accessor.getSessionAttributes().put("SPRING_SECURITY_CONTEXT", authentication);
 
-            // Set user principal to userUid for /user/{userUid}/... routing
             accessor.setUser(() -> user.getUid());
 
             log.info("WebSocket connection successful for user: {} (uid: {}); command: {}; channel: {};",
@@ -143,6 +183,29 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
         }
     }
 
+    /**
+     * Extracts the JWT token from various sources in the STOMP message.
+     * 
+     * <p>
+     * This method attempts to extract the token from multiple locations to support
+     * different WebSocket clients and connection methods (native WebSocket and
+     * SockJS).
+     * </p>
+     * 
+     * <p>
+     * Extraction priority:
+     * </p>
+     * <ol>
+     * <li>STOMP Authorization header (native WebSocket)</li>
+     * <li>Query parameter in SockJS URL</li>
+     * <li>Session attributes (from handshake interceptor)</li>
+     * </ol>
+     * 
+     * @param accessor the STOMP header accessor containing message headers and
+     *                 session
+     * @return the extracted JWT token (without "Bearer " prefix)
+     * @throws IllegalArgumentException if no valid token is found
+     */
     private String extractToken(StompHeaderAccessor accessor) {
         // Try to get from Authorization header (STOMP headers)
         List<String> authorization = accessor.getNativeHeader("Authorization");

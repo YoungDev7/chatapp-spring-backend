@@ -1,6 +1,5 @@
 package com.chatapp.chatapp.config;
 
-
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -27,17 +26,18 @@ public class Config {
 
     private final UserRepository userRepository;
 
-
     @Bean
-    CommandLineRunner commandLineRunner(MessageRepository messageRepository, UserRepository userRepository, ApplicationContext ctx){
-        return args ->{
-            
+    CommandLineRunner commandLineRunner(MessageRepository messageRepository, UserRepository userRepository,
+            ApplicationContext ctx) {
+        return args -> {
+
         };
     }
 
     @Bean
-    public UserDetailsService userDetailsService(){
-        return username -> userRepository.findUserByEmail(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    public UserDetailsService userDetailsService() {
+        return username -> userRepository.findUserByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     @Bean
@@ -57,12 +57,12 @@ public class Config {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
+
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         return mapper;
     }
-        
+
 }

@@ -22,6 +22,30 @@ import com.chatapp.chatapp.repository.MessageRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Service responsible for managing chat messages and message delivery.
+ * 
+ * <p>
+ * This service handles the complete message lifecycle including creation,
+ * storage,
+ * retrieval, and delivery to users. It implements a hybrid delivery mechanism
+ * that
+ * combines WebSocket for real-time delivery to online users and RabbitMQ
+ * queuing
+ * for offline users.
+ * 
+ * <p>
+ * Key responsibilities include:
+ * <ul>
+ * <li>Creating and persisting messages to the database</li>
+ * <li>Delivering messages to online users via WebSocket</li>
+ * <li>Queuing messages for offline users in RabbitMQ</li>
+ * <li>Retrieving message history for chat views</li>
+ * <li>Managing message deletion</li>
+ * <li>Enforcing authorization checks for message operations</li>
+ * </ul>
+ * 
+ */
 @Service
 @RequiredArgsConstructor
 public class MessageService {
@@ -37,9 +61,29 @@ public class MessageService {
     private final AuthUtilService authUtilService;
 
     /**
-     * Posts a new message to a chatview
-     * Saves to database, delivers to online users via WebSocket,
-     * and queues for offline users in RabbitMQ
+     * Posts a new message to a chatview.
+     * 
+     * <p>
+     * This method performs the following operations:
+     * <ul>
+     * <li>Validates that the sender is a member of the chatview</li>
+     * <li>Creates and persists the message with UTC timestamp</li>
+     * <li>Delivers the message to online users via WebSocket</li>
+     * <li>Queues the message for offline users in RabbitMQ</li>
+     * </ul>
+     * 
+     * <p>
+     * Message delivery is user-specific: each user receives the message through
+     * their own WebSocket destination or RabbitMQ queue based on their online
+     * status.
+     * 
+     * @param text       the message text content
+     * @param chatViewId the ID of the chatview to post the message to
+     * @param createdAt  the timestamp when the message was created (converted to
+     *                   UTC)
+     * @param principal  the authenticated user principal who is sending the message
+     * @throws IllegalStateException if the chatview is not found
+     * @throws AccessDeniedException if the user is not a member of the chatview
      */
     @Transactional
     public void postMessageToChatView(String text, String chatViewId, ZonedDateTime createdAt, Principal principal) {
@@ -80,7 +124,17 @@ public class MessageService {
     }
 
     /**
-     * Gets all messages for a specific chatview
+     * Gets all messages for a specific chatview.
+     * 
+     * <p>
+     * Retrieves the complete message history for a chatview and converts
+     * each message to a response DTO containing the message text, sender
+     * information,
+     * and timestamp.
+     * 
+     * @param chatViewId the ID of the chatview to retrieve messages from
+     * @return list of MessageResponse objects representing all messages in the
+     *         chatview
      */
     public List<MessageResponse> getMessagesByChatView(String chatViewId) {
         List<Message> messages = messageRepository.findByChatViewId(chatViewId);
@@ -89,6 +143,12 @@ public class MessageService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Deletes a message by its ID.
+     * 
+     * @param id the ID of the message to delete
+     * @throws IllegalStateException if the message is not found in the database
+     */
     // delete message
     public void deleteMessage(Long id) {
         if (messageRepository.existsById(id)) {

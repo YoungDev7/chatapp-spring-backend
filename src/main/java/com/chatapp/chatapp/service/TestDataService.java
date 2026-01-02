@@ -13,6 +13,29 @@ import com.chatapp.chatapp.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Service responsible for initializing test data in development environments.
+ * 
+ * <p>
+ * This service creates predefined test users when the application starts in
+ * development or Docker development mode. It ensures consistent test data is
+ * available
+ * for manual testing and development purposes.
+ * 
+ * <p>
+ * Key responsibilities include:
+ * <ul>
+ * <li>Creating test users if they don't already exist</li>
+ * <li>Only operating in development profiles (dev or docker_dev)</li>
+ * <li>Preventing duplicate test user creation</li>
+ * <li>Logging test data initialization activities</li>
+ * </ul>
+ * 
+ * <p>
+ * <b>Note:</b> This service only runs in development environments and should
+ * never be active in production.
+ * 
+ */
 @Service
 @RequiredArgsConstructor
 public class TestDataService {
@@ -26,6 +49,25 @@ public class TestDataService {
     private final UserRepository userRepository;
     private final UserService userService;
 
+    /**
+     * Initializes minimal test data by creating predefined test users.
+     * 
+     * <p>
+     * This method checks if the application is running in development or Docker
+     * development mode, and creates two test users if they don't already exist:
+     * <ul>
+     * <li>Test User One (test1@email.com, password: testuserone)</li>
+     * <li>Test User Two (test2@email.com, password: testusertwo)</li>
+     * </ul>
+     * 
+     * <p>
+     * The method is idempotent - it checks for existing users by email before
+     * creating them, so it can be safely called multiple times.
+     * 
+     * <p>
+     * <b>Note:</b> This method only operates when the active profile is 'dev' or
+     * 'docker_dev'. It has no effect in production environments.
+     */
     @Transactional
     public void initializeMinimalTestData() {
         if (activeDockerProfile.equals("docker_dev") || activeSpringProfile.equals("dev")) {

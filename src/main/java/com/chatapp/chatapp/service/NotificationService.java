@@ -12,6 +12,24 @@ import com.chatapp.chatapp.dto.NotificationDTO.NotificationType;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Service responsible for sending real-time notifications to users via
+ * WebSocket.
+ * 
+ * <p>
+ * This service handles the delivery of system notifications to online users,
+ * such as being added to chatviews or other application events. It checks user
+ * online status and WebSocket session availability before attempting delivery.
+ * 
+ * <p>
+ * Key responsibilities include:
+ * <ul>
+ * <li>Sending chatview membership notifications</li>
+ * <li>Verifying user online status before sending notifications</li>
+ * <li>Validating active WebSocket sessions</li>
+ * <li>Routing notifications to user-specific WebSocket destinations</li>
+ * </ul>
+ */
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
@@ -22,6 +40,16 @@ public class NotificationService {
     private final UserSessionService userSessionService;
     private final SimpUserRegistry simpUserRegistry;
 
+    /**
+     * Notifies a user that they have been added to a chatview.
+     * 
+     * <p>
+     * Sends a notification of type ADDED_TO_CHATVIEW to the user if they are
+     * currently online. If the user is offline, the notification is skipped.
+     * 
+     * @param userUid    the UID of the user to notify
+     * @param chatviewId the ID of the chatview the user was added to
+     */
     public void notifyUserAddedToChatView(String userUid, String chatviewId) {
         sendNotificationToUser(
                 NotificationDTO.builder()

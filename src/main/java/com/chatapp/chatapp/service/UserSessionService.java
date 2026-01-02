@@ -14,6 +14,29 @@ import com.chatapp.chatapp.repository.UserSessionRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Service responsible for managing user online/offline status and WebSocket
+ * sessions.
+ * 
+ * <p>
+ * This service tracks user presence by maintaining session information that
+ * includes
+ * their online status and active WebSocket session IDs. It provides essential
+ * functionality
+ * for the real-time messaging system to determine whether to deliver messages
+ * via WebSocket
+ * or queue them in RabbitMQ.
+ * 
+ * <p>
+ * Key responsibilities include:
+ * <ul>
+ * <li>Tracking user online/offline status</li>
+ * <li>Managing WebSocket session ID associations with users</li>
+ * <li>Providing presence information for message delivery routing</li>
+ * <li>Creating user sessions when users first connect</li>
+ * </ul>
+ * 
+ */
 @Service
 @RequiredArgsConstructor
 public class UserSessionService {
@@ -91,9 +114,6 @@ public class UserSessionService {
                 .map(UserSession::getWebsocketSessionId);
     }
 
-    /**
-     * Gets the user UID from a WebSocket session ID
-     */
     public Optional<String> getUserUidFromSessionId(String websocketSessionId) {
         return userSessionRepository.findByWebsocketSessionId(websocketSessionId)
                 .map(UserSession::getUserUid);

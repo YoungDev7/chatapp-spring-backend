@@ -22,6 +22,28 @@ import com.chatapp.chatapp.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Service responsible for managing chat views (chat rooms/conversations).
+ * 
+ * <p>
+ * This service handles the complete lifecycle of chat views including creation,
+ * user membership management, and retrieval operations. It coordinates with
+ * RabbitMQ
+ * to set up message queues for users and publishes events for notification
+ * purposes.
+ * 
+ * <p>
+ * Key responsibilities include:
+ * <ul>
+ * <li>Creating new chat views with initial user membership</li>
+ * <li>Adding and removing users from chat views</li>
+ * <li>Managing RabbitMQ queues for user-specific message delivery</li>
+ * <li>Publishing events when users are added to chat views</li>
+ * <li>Retrieving chat view information and user membership data</li>
+ * <li>Enforcing authorization checks for chat view operations</li>
+ * </ul>
+ * 
+ */
 @Service
 @RequiredArgsConstructor
 public class ChatViewService {
@@ -35,7 +57,25 @@ public class ChatViewService {
     private final AuthUtilService authUtilService;
 
     /**
-     * Creates a new chatview
+     * Creates a new chatview with the specified users.
+     * 
+     * <p>
+     * The authenticated user is automatically added as the creator and first
+     * member.
+     * Additional users specified in the request are added after creation. For each
+     * user,
+     * a RabbitMQ queue is created for offline message delivery, and a
+     * UserAddedToChatViewEvent
+     * is published for notification purposes.
+     * 
+     * <p>
+     * If any additional users fail to be added, the operation continues and logs a
+     * warning
+     * without rolling back the chatview creation.
+     * 
+     * @param request the chat view creation request containing the name and list of
+     *                user UIDs
+     * @throws IllegalStateException if the authenticated user cannot be retrieved
      */
     @Transactional
     public void createChatView(ChatViewRequest request) {
@@ -66,7 +106,18 @@ public class ChatViewService {
     }
 
     /**
-     * Adds a user to a chatview (with authorization check)
+     * Adds a user to a chatview with authorization check.
+     * 
+     * <p>
+     * This method verifies that the authenticated user is already a member of the
+     * chatview before allowing them to add another user. This ensures only existing
+     * members can invite new users.
+     * 
+     * @param chatViewId the ID of the chatview to add the user to
+     * @param userUid    the UID of the user to add
+     * @throws AccessDeniedException if the authenticated user is not a member of
+     *                               the chatview
+     * @throws IllegalStateException if the chatview or user is not found
      */
     @Transactional
     public void addUserToChatView(String chatViewId, String userUid)
@@ -87,7 +138,20 @@ public class ChatViewService {
     }
 
     /**
-     * add user without authorization check
+     * Adds a user to a chatview without authorization check.
+     * 
+     * <p>
+     * This method bypasses membership verification and is used internally during
+     * chatview creation or by administrators. It creates a RabbitMQ queue for the
+     * user
+     * and publishes a UserAddedToChatViewEvent for notification.
+     * 
+     * <p>
+     * Any exceptions during the operation are caught and logged as warnings without
+     * propagating up the call stack.
+     * 
+     * @param chatViewId the ID of the chatview to add the user to
+     * @param userUid    the UID of the user to add
      */
     @Transactional
     public void addUserToChatViewNoValidation(String chatViewId, String userUid) {
@@ -113,7 +177,15 @@ public class ChatViewService {
     }
 
     /**
-     * Removes a user from a chatview
+     * Removes a user from a chatview.
+     * 
+     * <p>
+     * This method removes the user's membership and deletes their associated
+     * RabbitMQ queue to prevent accumulation of undeliverable messages.
+     * 
+     * @param chatViewId the ID of the chatview to remove the user from
+     * @param userUid    the UID of the user to remove
+     * @throws IllegalStateException if the chatview or user is not found
      */
     @Transactional
     public void removeUserFromChatView(String chatViewId, String userUid) {
@@ -133,7 +205,15 @@ public class ChatViewService {
     }
 
     /**
-     * Gets all chatviews for a user
+     * Gets all chatviews for a user.
+     * 
+     * <p>
+     * Retrieves all chatviews where the specified user is a member and converts
+     * them to response DTOs containing chatview details, member avatars, and
+     * message counts.
+     * 
+     * @param userUid the UID of the user whose chatviews to retrieve
+     * @return list of ChatViewResponse objects representing the user's chatviews
      */
     @Transactional(readOnly = true)
     public List<ChatViewResponse> getChatViewsForUser(String userUid) {
@@ -144,7 +224,15 @@ public class ChatViewService {
     }
 
     /**
-     * Gets a specific chatview by ID
+     * Gets a specific chatview by ID.
+     * 
+     * <p>
+     * Retrieves a chatview with all its user members and converts it to a response
+     * DTO.
+     * 
+     * @param chatViewId the ID of the chatview to retrieve
+     * @return ChatViewResponse object containing the chatview details
+     * @throws IllegalStateException if the chatview is not found
      */
     @Transactional(readOnly = true)
     public ChatViewResponse getChatViewById(String chatViewId) {
@@ -154,7 +242,12 @@ public class ChatViewService {
     }
 
     /**
-     * Checks if a user is a member of a chatview
+     * Checks if a user is a member of a chatview.
+     * 
+     * @param chatViewId the ID of the chatview to check
+     * @param userUid    the UID of the user to check
+     * @return true if the user is a member of the chatview, false otherwise
+     * @throws IllegalStateException if the chatview is not found
      */
     public boolean isUserInChatView(String chatViewId, String userUid) {
         ChatView chatView = chatViewRepository.findByIdWithUsers(chatViewId)
@@ -164,7 +257,11 @@ public class ChatViewService {
     }
 
     /**
-     * Gets all user UIDs in a specific chatview
+     * Gets all user UIDs in a specific chatview.
+     * 
+     * @param chatViewId the ID of the chatview
+     * @return set of user UIDs who are members of the chatview
+     * @throws IllegalStateException if the chatview is not found
      */
     public Set<String> getUserUidsInChatView(String chatViewId) {
         ChatView chatView = chatViewRepository.findByIdWithUsers(chatViewId)

@@ -22,6 +22,28 @@ import com.chatapp.chatapp.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Service responsible for handling user authentication and authorization
+ * operations.
+ * 
+ * <p>
+ * This service manages the core authentication lifecycle including user login,
+ * registration, token refresh, and logout operations. It coordinates with JWT
+ * service
+ * for token generation and validation, manages token persistence, and handles
+ * security context management.
+ * 
+ * <p>
+ * Key responsibilities include:
+ * <ul>
+ * <li>Authenticating users with email and password credentials</li>
+ * <li>Generating and managing JWT access and refresh tokens</li>
+ * <li>Registering new users with validation</li>
+ * <li>Implementing token rotation for enhanced security</li>
+ * <li>Revoking tokens during logout operations</li>
+ * </ul>
+ * 
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -60,6 +82,19 @@ public class AuthService {
 
     /**
      * Registers a new user with the provided information after validating the data.
+     * 
+     * <p>
+     * This method performs comprehensive validation including:
+     * <ul>
+     * <li>Checking for duplicate email addresses</li>
+     * <li>Checking for duplicate usernames (case-insensitive)</li>
+     * <li>Validating email format using Apache Commons EmailValidator</li>
+     * <li>Ensuring username and password are not blank</li>
+     * </ul>
+     * 
+     * <p>
+     * Upon successful validation, the user is created with an encoded password
+     * and persisted to the database.
      * 
      * @param request the registration request containing username, password, and
      *                email

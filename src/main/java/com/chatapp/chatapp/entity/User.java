@@ -80,6 +80,12 @@ public class User implements UserDetails {
     return password;
   }
 
+  /**
+   * Returns the username used to authenticate the user.
+   * Currently returns the email address as the username.
+   * 
+   * @return the user's email address used as username
+   */
   @Override
   public String getUsername() {
     return email; // THIS SUCKS TODO: CHANGE THIS

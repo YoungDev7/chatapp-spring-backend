@@ -1,7 +1,5 @@
 package com.chatapp.chatapp.config;
 
-
-
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import org.springframework.context.annotation.Bean;
@@ -27,28 +25,28 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @EnableMethodSecurity
 public class SecurityConfig {
-    
+
     public static final String[] WHITE_LIST_URL = {
             "/api/v1/auth/authenticate",
             "/api/v1/auth/register",
-            "/ws/**"};
+            "/ws/**" };
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
     private final CorsConfigurationSource corsSource;
     private final LoggingFilter loggingFilter;
     private final UserContextFilter userContextFilter;
-    
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req -> {
                     req.requestMatchers(HttpMethod.OPTIONS, "/**")
-                        .permitAll()
-                        .requestMatchers(WHITE_LIST_URL)
-                        .permitAll()
-                        .anyRequest()
-                        .authenticated();
+                            .permitAll()
+                            .requestMatchers(WHITE_LIST_URL)
+                            .permitAll()
+                            .anyRequest()
+                            .authenticated();
                 })
                 .cors(cors -> cors.configurationSource(corsSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
