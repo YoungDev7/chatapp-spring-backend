@@ -4,8 +4,8 @@
 # └── chatapp-react-frontend/     (cloned separately)
 services:
   backend:
-    build: 
-      context: . 
+    build:
+      context: .
     env_file:
       - .env
     environment:
@@ -73,22 +73,21 @@ services:
     networks:
       - spring-rabbitmq
     ports:
-      - "5672:5672"
-      - "15672:15672"  # RabbitMQ Management UI
+      - "${RABBITMQ_PORT_WEB}:5672"
+      - "${RABBITMQ_PORT_AMQ}:15672"
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
 
   frontend:
     build:
-      context: ../chatapp-react-frontend 
+      context: ../chatapp-react-frontend
+      dockerfile: Dockerfile
     networks:
       - react-spring
-    env_file:
-      - .env
     depends_on:
       - backend
     ports:
-      - "${FRONTEND_PORT}:80"
+      - "${FRONTEND_PORT:-80}:80"
 
 volumes:
   db-data: {}

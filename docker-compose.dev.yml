@@ -5,7 +5,7 @@
 
 services:
   backend:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile.dev
     restart: always
@@ -44,7 +44,7 @@ services:
       - "${BACKEND_PORT}:8080"
     volumes:
       # Hot reload mounts - more comprehensive
-      - ./src:/app/src          
+      - ./src:/app/src
       - ./pom.xml:/app/pom.xml
       # Add these for better file watching
       - ./target/classes:/app/target/classes
@@ -91,8 +91,8 @@ services:
     networks:
       - spring-rabbitmq
     ports:
-      - "5672:5672"
-      - "15672:15672"  # RabbitMQ Management UI
+      - "${RABBITMQ_PORT_WEB}:5672"
+      - "${RABBITMQ_PORT_AMQ}:15672"
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
 
@@ -104,21 +104,22 @@ services:
       - react-spring
     depends_on:
       - backend
-    env_file:
-      - ../chatapp-react-frontend/.env
     environment:
       - NODE_ENV=development
-      - FRONTEND_PORT=5173
       - VITE_API_BASE_URL=${VITE_API_BASE_URL}
       - VITE_WS_BASE_URL=${VITE_WS_BASE_URL}
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5173}:5173"
     volumes:
       # Simplified volume mounts for frontend
       - ../chatapp-react-frontend/src:/usr/src/app/src
       - ../chatapp-react-frontend/public:/usr/src/app/public
       - ../chatapp-react-frontend/package.json:/usr/src/app/package.json
-      - ../chatapp-react-frontend/vite.config.js:/usr/src/app/vite.config.js
+      - ../chatapp-react-frontend/package-lock.json:/usr/src/app/package-lock.json
+      - ../chatapp-react-frontend/vite.config.ts:/usr/src/app/vite.config.ts
+      - ../chatapp-react-frontend/tsconfig.json:/usr/src/app/tsconfig.json
+      - ../chatapp-react-frontend/tsconfig.app.json:/usr/src/app/tsconfig.app.json
+      - ../chatapp-react-frontend/tsconfig.node.json:/usr/src/app/tsconfig.node.json
       - ../chatapp-react-frontend/index.html:/usr/src/app/index.html
       # Keep node_modules in container
       - /usr/src/app/node_modules
