@@ -52,7 +52,8 @@ services:
       - maven-cache:/root/.m2
       # Exclude target from volume mount to prevent conflicts
       - /app/target
-      - ./logs:/logs
+      # Use named volume for logs instead of bind mount
+      - logs-data:/logs
 
   db:
     image: mysql:8.0
@@ -120,6 +121,7 @@ services:
       - ../chatapp-react-frontend/tsconfig.json:/usr/src/app/tsconfig.json
       - ../chatapp-react-frontend/tsconfig.app.json:/usr/src/app/tsconfig.app.json
       - ../chatapp-react-frontend/tsconfig.node.json:/usr/src/app/tsconfig.node.json
+      - ../chatapp-react-frontend/tsconfig.test.json:/usr/src/app/tsconfig.test.json
       - ../chatapp-react-frontend/index.html:/usr/src/app/index.html
       # Keep node_modules in container
       - /usr/src/app/node_modules
@@ -128,6 +130,7 @@ volumes:
   db-data: {}
   maven-cache: {}
   rabbitmq-data: {}
+  logs-data: {}
 
 networks:
   react-spring: {}
