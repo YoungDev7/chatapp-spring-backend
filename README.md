@@ -594,7 +594,7 @@ The generated Javadoc provides a complete API reference for all public classes a
 
 ## 🔗 Related Projects
 
-- [Frontend Repository](https://github.com/YoungDev7/chatapp-react-frontend) - React frontend application
+- [Frontend Repository](https://github.com/jakubp03/chatapp-react-frontend) - React frontend application
 
 ## 📄 License
 
